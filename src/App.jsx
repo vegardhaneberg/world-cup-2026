@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Matches from "./pages/Matches";
 import Ligaer from "./pages/Ligaer";
 import PlayedMatches from "./pages/PlayedMatches";
+import Rules from "./pages/Rules";
 import JoinPage from "./pages/JoinPage";
 import { matches } from "./data/dummyData";
 import { isMatchHidden } from "./data/matchUtils";
@@ -81,6 +82,22 @@ function IconHistory() {
   );
 }
 
+function IconBook() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 3h9a1 1 0 0 1 1 1v16a1 1 0 0 0-1-1H2z" />
+      <path d="M22 3h-9a1 1 0 0 0-1 1v16a1 1 0 0 1 1-1h9z" />
+    </svg>
+  );
+}
+
 function Coupon({ predictions }) {
   const upcoming = matches.filter((m) => !isMatchHidden(m));
   const total = upcoming.length;
@@ -117,7 +134,8 @@ function MainView() {
   const { user } = useAuth();
   const { predictions, predict } = usePredictions();
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get("tab") === "ligaer" ? "ligaer" : "tip");
+  const initialTab = ["ligaer", "regler"].includes(searchParams.get("tab")) ? searchParams.get("tab") : "tip";
+  const [tab, setTab] = useState(initialTab);
 
   const fullName = user?.user_metadata?.full_name ?? user?.email ?? "Deg";
   const firstName = fullName.split(" ")[0];
@@ -167,11 +185,20 @@ function MainView() {
         >
           <IconHistory /> Spilte kamper
         </button>
+        <button
+          className="tab"
+          role="tab"
+          aria-selected={tab === "regler"}
+          onClick={() => setTab("regler")}
+        >
+          <IconBook /> Regler
+        </button>
       </div>
 
       {tab === "tip" && <Matches onPick={predict} />}
       {tab === "ligaer" && <Ligaer />}
       {tab === "spilte" && <PlayedMatches />}
+      {tab === "regler" && <Rules />}
 
       {tab === "tip" && <Coupon predictions={predictions} />}
     </div>

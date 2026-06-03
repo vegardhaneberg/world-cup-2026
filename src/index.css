@@ -523,6 +523,19 @@ button { font-family: var(--ff-body); cursor: pointer; }
   letter-spacing: 0.4px; color: var(--ink-2); margin: 0 0 12px;
 }
 
+/* ---- Rules page ---- */
+.rules-body { display: flex; flex-direction: column; gap: 8px; }
+.rules-section {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 16px 18px;
+}
+.rules-section h3 {
+  font-family: var(--ff-display); font-size: 15px; text-transform: uppercase;
+  letter-spacing: 0.5px; margin: 0 0 10px;
+}
+.rules-section ul { margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 6px; }
+.rules-section li { font-size: 14px; line-height: 1.5; color: var(--ink); }
+
 /* ---- Responsive ---- */
 @media (max-width: 520px) {
   .app { padding: 0 16px 132px; }
