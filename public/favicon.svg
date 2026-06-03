@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Red accent background circle -->
+  <circle cx="16" cy="16" r="16" fill="#c4492f"/>
+  <!-- Soccer ball: cream circle with dark stroke -->
+  <circle cx="16" cy="16" r="11" fill="#fdf3e7" stroke="#20283f" stroke-width="1.8"/>
+  <!-- Pentagon patch -->
+  <polygon points="16,10 20.7,13.4 18.9,18.9 13.1,18.9 11.3,13.4" fill="#20283f"/>
+</svg>
