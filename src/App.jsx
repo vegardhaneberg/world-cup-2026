@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import {
   PredictionProvider,
@@ -185,6 +185,17 @@ function ProtectedRoute({ children }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      const pendingToken = localStorage.getItem('pendingJoinToken')
+      if (pendingToken) {
+        localStorage.removeItem('pendingJoinToken')
+        navigate(`/join/${pendingToken}`, { replace: true })
+      }
+    }
+  }, [user])
 
   if (loading) {
     return (

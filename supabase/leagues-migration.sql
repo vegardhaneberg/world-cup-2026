@@ -17,9 +17,10 @@ create table if not exists public.leagues (
 alter table public.leagues enable row level security;
 
 drop policy if exists "Authenticated users can read leagues" on public.leagues;
-create policy "Authenticated users can read leagues"
+drop policy if exists "Anyone can read leagues" on public.leagues;
+create policy "Anyone can read leagues"
   on public.leagues for select
-  using (auth.uid() is not null);
+  using (true);
 
 drop policy if exists "Authenticated users can create leagues" on public.leagues;
 create policy "Authenticated users can create leagues"

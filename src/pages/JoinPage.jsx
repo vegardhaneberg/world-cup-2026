@@ -136,7 +136,10 @@ export default function JoinPage() {
           <p className="join-subtitle">Logg inn for å bli med i ligaen.</p>
           <button
             className="btn-google"
-            onClick={() => login(`${window.location.origin}/join/${token}`)}
+            onClick={() => {
+              localStorage.setItem('pendingJoinToken', token)
+              login(window.location.origin)
+            }}
           >
             <GoogleIcon />
             Logg inn med Google
