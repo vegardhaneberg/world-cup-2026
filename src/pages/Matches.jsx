@@ -1,0 +1,224 @@
+import { useState } from "react";
+import { usePredictions } from "../context/PredictionContext";
+import { matches, getTeamInfo } from "../data/dummyData";
+
+function formatTime(dateStr) {
+  return new Date(dateStr).toLocaleTimeString("no", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Oslo",
+  });
+}
+
+function formatDateHeading(localDate) {
+  return new Date(localDate + "T12:00:00Z").toLocaleDateString("no", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function groupByLocalDate(matchList) {
+  const map = {};
+  for (const m of matchList) {
+    if (!map[m.localDate]) map[m.localDate] = [];
+    map[m.localDate].push(m);
+  }
+  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
+}
+
+function Disc({ teamName }) {
+  const { code, disc, fg } = getTeamInfo(teamName);
+  return (
+    <span className="disc" style={{ background: disc, color: fg }}>
+      {code}
+    </span>
+  );
+}
+
+function Picker({
+  matchId,
+  pointsHome,
+  pointsDraw,
+  pointsAway,
+  value,
+  onPick,
+}) {
+  const opts = [
+    { outcome: "home", label: "H", name: "Hjemme", pts: pointsHome },
+    { outcome: "draw", label: "U", name: "Uavgjort", pts: pointsDraw },
+    { outcome: "away", label: "B", name: "Borte", pts: pointsAway },
+  ];
+  return (
+    <div className="picker">
+      {opts.map((o) => (
+        <button
+          key={o.outcome}
+          className="pick"
+          aria-pressed={value === o.outcome}
+          onClick={() => onPick(matchId, o.outcome)}
+        >
+          <span className="k">{o.label}</span>
+          <span className="lbl">{o.name}</span>
+          <span className="pt">{o.pts} p</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function UpcomingCard({ match, prediction, onPick }) {
+  const time = formatTime(match.date);
+  return (
+    <div className="match">
+      <div className="match-top">
+        <span className="grp">Gruppe {match.group}</span>
+        {match.isEven && <span className="hardflag">Jevn kamp</span>}
+        <span className="ko">
+          <b>{time}</b> · {match.city}
+        </span>
+      </div>
+      <div className="fixture">
+        <div className="team home">
+          <Disc teamName={match.homeTeam} />
+          <div>
+            <div className="nm">{match.homeTeam}</div>
+            <div className="meta">{match.venue}</div>
+          </div>
+        </div>
+        <span className="vs">VS</span>
+        <div className="team away">
+          <Disc teamName={match.awayTeam} />
+          <div>
+            <div className="nm">{match.awayTeam}</div>
+            <div className="meta">Avspark {time}</div>
+          </div>
+        </div>
+      </div>
+      <Picker
+        matchId={match.id}
+        pointsHome={match.pointsHome}
+        pointsDraw={match.pointsDraw}
+        pointsAway={match.pointsAway}
+        value={prediction}
+        onPick={onPick}
+      />
+    </div>
+  );
+}
+
+function CompletedCard({ match, prediction }) {
+  const resultOutcome = match.result;
+  const correct = prediction && prediction === resultOutcome;
+  const pointsEarned = correct
+    ? prediction === "home"
+      ? match.pointsHome
+      : prediction === "draw"
+        ? match.pointsDraw
+        : match.pointsAway
+    : 0;
+
+  return (
+    <div className="match match--done">
+      <div className="match-top">
+        <span className="grp">Gruppe {match.group}</span>
+        <span className="ko">
+          <b>{formatTime(match.date)}</b> · {match.city}
+        </span>
+      </div>
+      <div className="fixture">
+        <div className="team home">
+          <Disc teamName={match.homeTeam} />
+          <div>
+            <div className="nm">{match.homeTeam}</div>
+          </div>
+        </div>
+        <span className="vs result-score">
+          {match.homeScore} – {match.awayScore}
+        </span>
+        <div className="team away">
+          <Disc teamName={match.awayTeam} />
+          <div>
+            <div className="nm">{match.awayTeam}</div>
+          </div>
+        </div>
+      </div>
+      <div className="result-row">
+        {!prediction && (
+          <span className="result-badge pending">Ikke tippet</span>
+        )}
+        {prediction && correct && (
+          <span className="result-badge correct">✓ +{pointsEarned} p</span>
+        )}
+        {prediction && !correct && (
+          <span className="result-badge wrong">✗ Feil tips</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Matches({ onPick }) {
+  const { predictions } = usePredictions();
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const upcoming = matches.filter((m) => m.status !== "completed");
+  const completed = matches.filter((m) => m.status === "completed");
+
+  const upcomingGrouped = groupByLocalDate(upcoming);
+  const completedGrouped = groupByLocalDate(completed);
+
+  return (
+    <div>
+      <div className="section-head">
+        <div>
+          <h2>Kommende kamper</h2>
+        </div>
+        <span className="date-flag">{upcoming.length} kamper</span>
+      </div>
+
+      {upcomingGrouped.map(([date, dayMatches]) => (
+        <div key={date}>
+          <div className="day-head">{formatDateHeading(date)}</div>
+          {dayMatches.map((m) => (
+            <UpcomingCard
+              key={m.id}
+              match={m}
+              prediction={predictions[m.id]}
+              onPick={onPick}
+            />
+          ))}
+        </div>
+      ))}
+
+      {completed.length > 0 && (
+        <div style={{ marginTop: 32, marginBottom: 16 }}>
+          <button
+            className="toggle-completed"
+            onClick={() => setShowCompleted((v) => !v)}
+          >
+            {showCompleted
+              ? "↑ Skjul tidligere kamper"
+              : `↓ Vis ${completed.length} tidligere kamp${completed.length !== 1 ? "er" : ""}`}
+          </button>
+
+          {showCompleted &&
+            completedGrouped.map(([date, dayMatches]) => (
+              <div key={date}>
+                <div className="day-head" style={{ marginTop: 20 }}>
+                  {formatDateHeading(date)}
+                </div>
+                {dayMatches.map((m) => (
+                  <CompletedCard
+                    key={m.id}
+                    match={m}
+                    prediction={predictions[m.id]}
+                  />
+                ))}
+              </div>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}

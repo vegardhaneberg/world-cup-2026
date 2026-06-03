@@ -1,0 +1,132 @@
+import rawMatches from './matches.json'
+import { getMatchPoints } from './scoring'
+
+export const TEAM_INFO = {
+  'Mexico':               { code: 'MEX', disc: '#006847', fg: '#ffffff' },
+  'South Africa':         { code: 'RSA', disc: '#007A4D', fg: '#FFB81C' },
+  'South Korea':          { code: 'KOR', disc: '#C60C30', fg: '#ffffff' },
+  'Czech Republic':       { code: 'CZE', disc: '#D7141A', fg: '#ffffff' },
+  'Canada':               { code: 'CAN', disc: '#FF0000', fg: '#ffffff' },
+  'Bosnia & Herzegovina': { code: 'BIH', disc: '#002395', fg: '#FFCE00' },
+  'Qatar':                { code: 'QAT', disc: '#8D1B3D', fg: '#ffffff' },
+  'Switzerland':          { code: 'SUI', disc: '#FF0000', fg: '#ffffff' },
+  'Brazil':               { code: 'BRA', disc: '#009C3B', fg: '#FEDF00' },
+  'Morocco':              { code: 'MAR', disc: '#C1272D', fg: '#006233' },
+  'Haiti':                { code: 'HAI', disc: '#00209F', fg: '#D21034' },
+  'Scotland':             { code: 'SCO', disc: '#003F87', fg: '#ffffff' },
+  'USA':                  { code: 'USA', disc: '#002868', fg: '#BF0A30' },
+  'Paraguay':             { code: 'PAR', disc: '#D52B1E', fg: '#ffffff' },
+  'Australia':            { code: 'AUS', disc: '#00843D', fg: '#FFD700' },
+  'Turkey':               { code: 'TUR', disc: '#E30A17', fg: '#ffffff' },
+  'Germany':              { code: 'GER', disc: '#1a1a1a', fg: '#ffffff' },
+  'Curaçao':              { code: 'CUW', disc: '#003DA5', fg: '#F9D616' },
+  'Ivory Coast':          { code: 'CIV', disc: '#F77F00', fg: '#ffffff' },
+  'Ecuador':              { code: 'ECU', disc: '#FFD100', fg: '#003580' },
+  'Netherlands':          { code: 'NED', disc: '#FF6600', fg: '#ffffff' },
+  'Japan':                { code: 'JPN', disc: '#BC002D', fg: '#ffffff' },
+  'Sweden':               { code: 'SWE', disc: '#006AA7', fg: '#FECC02' },
+  'Tunisia':              { code: 'TUN', disc: '#E70013', fg: '#ffffff' },
+  'Belgium':              { code: 'BEL', disc: '#ED2939', fg: '#1a1a1a' },
+  'Egypt':                { code: 'EGY', disc: '#C8102E', fg: '#ffffff' },
+  'Iran':                 { code: 'IRN', disc: '#239F40', fg: '#ffffff' },
+  'New Zealand':          { code: 'NZL', disc: '#00247D', fg: '#ffffff' },
+  'Spain':                { code: 'ESP', disc: '#C60B1E', fg: '#F1BF00' },
+  'Cape Verde':           { code: 'CPV', disc: '#003893', fg: '#CF2027' },
+  'Saudi Arabia':         { code: 'KSA', disc: '#006C35', fg: '#ffffff' },
+  'Uruguay':              { code: 'URU', disc: '#75AADB', fg: '#ffffff' },
+  'France':               { code: 'FRA', disc: '#003189', fg: '#ffffff' },
+  'Senegal':              { code: 'SEN', disc: '#00853F', fg: '#ffffff' },
+  'Iraq':                 { code: 'IRQ', disc: '#007A3D', fg: '#CE1126' },
+  'Norway':               { code: 'NOR', disc: '#EF2B2D', fg: '#ffffff' },
+  'Argentina':            { code: 'ARG', disc: '#74ACDF', fg: '#ffffff' },
+  'Algeria':              { code: 'ALG', disc: '#006233', fg: '#ffffff' },
+  'Austria':              { code: 'AUT', disc: '#ED2939', fg: '#ffffff' },
+  'Jordan':               { code: 'JOR', disc: '#007A3D', fg: '#CE1126' },
+  'Portugal':             { code: 'POR', disc: '#006600', fg: '#ffffff' },
+  'DR Congo':             { code: 'COD', disc: '#007FFF', fg: '#F7D547' },
+  'Uzbekistan':           { code: 'UZB', disc: '#1EB53A', fg: '#ffffff' },
+  'Colombia':             { code: 'COL', disc: '#FCD116', fg: '#003087' },
+  'England':              { code: 'ENG', disc: '#CF091F', fg: '#ffffff' },
+  'Croatia':              { code: 'CRO', disc: '#FF0000', fg: '#ffffff' },
+  'Ghana':                { code: 'GHA', disc: '#006B3F', fg: '#FCD116' },
+  'Panama':               { code: 'PAN', disc: '#DA121A', fg: '#ffffff' },
+}
+
+export function getTeamInfo(name) {
+  return TEAM_INFO[name] ?? {
+    code: name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase(),
+    disc: '#888888',
+    fg: '#ffffff',
+  }
+}
+
+// "13:00 UTC-6" → UTC ISO string for the given date
+function parseMatchTime(date, timeStr) {
+  const [hourMin, utcPart] = timeStr.split(' ')
+  const [h, m] = hourMin.split(':').map(Number)
+  const offset = parseFloat(utcPart.replace('UTC', ''))
+  const utcMinutes = h * 60 + m - offset * 60
+  const base = new Date(`${date}T00:00:00Z`)
+  base.setUTCMinutes(base.getUTCMinutes() + utcMinutes)
+  return base.toISOString()
+}
+
+export const matches = rawMatches.matches
+  .filter(m => m.group)
+  .map((m, i) => {
+    const pts = getMatchPoints(m.team1, m.team2)
+    const isEven = pts.oddsH != null && pts.oddsB != null
+      && Math.min(pts.oddsH, pts.oddsB) >= 2.4
+    return {
+      id: i + 1,
+      group: m.group.replace('Group ', ''),
+      round: m.round,
+      localDate: m.date,
+      homeTeam: m.team1,
+      awayTeam: m.team2,
+      date: parseMatchTime(m.date, m.time),
+      city: m.ground.split('(')[0].trim().split(',')[0].trim(),
+      venue: m.ground,
+      status: 'upcoming',
+      result: null,
+      homeScore: null,
+      awayScore: null,
+      pointsHome: pts.home,
+      pointsDraw: pts.draw,
+      pointsAway: pts.away,
+      isEven,
+    }
+  })
+
+// First upcoming match day (by local date)
+export function getActiveMatches() {
+  const upcoming = matches.filter(m => m.status !== 'completed')
+  if (!upcoming.length) return []
+  const sorted = [...upcoming].sort((a, b) => a.localDate.localeCompare(b.localDate))
+  const firstDate = sorted[0].localDate
+  return upcoming.filter(m => m.localDate === firstDate)
+}
+
+// Subsequent match days grouped by local date
+export function getUpcomingMatchDays() {
+  const upcoming = matches.filter(m => m.status !== 'completed')
+  if (upcoming.length <= 1) return []
+  const sorted = [...upcoming].sort((a, b) => a.localDate.localeCompare(b.localDate))
+  const firstDate = sorted[0].localDate
+  const later = sorted.filter(m => m.localDate !== firstDate)
+
+  const grouped = later.reduce((acc, m) => {
+    if (!acc[m.localDate]) acc[m.localDate] = []
+    acc[m.localDate].push(m)
+    return acc
+  }, {})
+
+  return Object.entries(grouped).map(([date, matchList]) => ({
+    date,
+    dayLabel: new Date(date + 'T12:00:00Z').toLocaleDateString('no', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    }),
+    matches: matchList,
+  }))
+}
+
