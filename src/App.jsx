@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import {
   PredictionProvider,
@@ -7,8 +7,9 @@ import {
 } from "./context/PredictionContext";
 import Login from "./pages/Login";
 import Matches from "./pages/Matches";
-import Leaderboard from "./pages/Leaderboard";
+import Ligaer from "./pages/Ligaer";
 import PlayedMatches from "./pages/PlayedMatches";
+import JoinPage from "./pages/JoinPage";
 import { matches } from "./data/dummyData";
 import { isMatchHidden } from "./data/matchUtils";
 
@@ -115,7 +116,8 @@ function Coupon({ predictions }) {
 function MainView() {
   const { user } = useAuth();
   const { predictions, predict } = usePredictions();
-  const [tab, setTab] = useState("tip");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get("tab") === "ligaer" ? "ligaer" : "tip");
 
   const fullName = user?.user_metadata?.full_name ?? user?.email ?? "Deg";
   const firstName = fullName.split(" ")[0];
@@ -152,10 +154,10 @@ function MainView() {
         <button
           className="tab"
           role="tab"
-          aria-selected={tab === "tabell"}
-          onClick={() => setTab("tabell")}
+          aria-selected={tab === "ligaer"}
+          onClick={() => setTab("ligaer")}
         >
-          <IconTable /> Tabellen
+          <IconTable /> Ligaer
         </button>
         <button
           className="tab"
@@ -168,7 +170,7 @@ function MainView() {
       </div>
 
       {tab === "tip" && <Matches onPick={predict} />}
-      {tab === "tabell" && <Leaderboard />}
+      {tab === "ligaer" && <Ligaer />}
       {tab === "spilte" && <PlayedMatches />}
 
       {tab === "tip" && <Coupon predictions={predictions} />}
@@ -200,6 +202,7 @@ function AppRoutes() {
         path="/login"
         element={user ? <Navigate to="/" replace /> : <Login />}
       />
+      <Route path="/join/:token" element={<JoinPage />} />
       <Route
         path="/*"
         element={

@@ -349,9 +349,178 @@ button { font-family: var(--ff-body); cursor: pointer; }
   line-height: 1.7;
 }
 
+/* ---- League pills ---- */
+.btn-create-league {
+  margin-left: auto; background: none; border: 1.5px solid var(--line-2); border-radius: 6px;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  font-size: 20px; line-height: 1; color: var(--ink-2); padding: 0;
+}
+.btn-create-league:hover { color: var(--ink); border-color: var(--ink-2); }
+
+.league-pills {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.league-pill {
+  background: none; border: 1.5px solid var(--line-2); border-radius: 999px;
+  padding: 5px 14px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.4px; color: var(--ink-2);
+}
+.league-pill.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+.league-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.league-head-name {
+  font-family: var(--ff-display); font-size: 16px; text-transform: uppercase;
+  letter-spacing: 0.4px; color: var(--ink-2);
+}
+.btn-gear {
+  background: none; border: none; padding: 4px; color: var(--ink-2);
+  display: grid; place-items: center;
+}
+.btn-gear svg { width: 17px; height: 17px; }
+.btn-gear:hover { color: var(--ink); }
+
+/* ---- Liga empty state ---- */
+.liga-empty {
+  padding: 40px 0; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.liga-empty-text {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--ink-2); margin: 0;
+}
+
+/* ---- Shared button ---- */
+.btn-accent {
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  padding: 11px 22px; font-weight: 800; font-size: 13px;
+  letter-spacing: 0.6px; text-transform: uppercase; cursor: pointer;
+}
+.btn-accent:disabled { background: var(--line-2); color: var(--ink-2); cursor: not-allowed; }
+.btn-secondary {
+  background: none; border: 1.5px solid var(--line-2); border-radius: 6px;
+  padding: 8px 14px; font-weight: 700; font-size: 12px; color: var(--ink); cursor: pointer;
+  white-space: nowrap;
+}
+.btn-secondary:disabled { color: var(--ink-2); cursor: not-allowed; }
+
+/* ---- Modal ---- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(38, 40, 45, 0.55);
+  display: grid; place-items: center; z-index: 50; padding: 20px;
+}
+.modal {
+  background: var(--card); border: 1px solid var(--line-2); border-radius: 14px;
+  width: 100%; max-width: 420px; overflow: hidden;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 16px; border-bottom: 1px solid var(--line);
+}
+.modal-header h3 {
+  font-family: var(--ff-display); font-size: 18px; text-transform: uppercase;
+  letter-spacing: 0.4px; margin: 0;
+}
+.modal-close {
+  background: none; border: none; font-size: 22px; line-height: 1;
+  color: var(--ink-2); padding: 0 4px; cursor: pointer;
+}
+.modal-close:hover { color: var(--ink); }
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ---- Form fields ---- */
+.field-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--ink-2); display: block;
+}
+.field-input {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--line-2); border-radius: 6px;
+  background: var(--paper); color: var(--ink); font-family: var(--ff-body); font-size: 14px;
+  outline: none;
+}
+.field-input:focus { border-color: var(--ink); }
+.field-row { display: flex; gap: 8px; }
+.field-row .field-input { flex: 1; }
+.field-error { font-size: 12px; color: var(--accent); font-weight: 600; margin: 0; }
+
+/* ---- Invite link ---- */
+.invite-link-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--paper); border: 1.5px solid var(--line-2); border-radius: 6px;
+  padding: 8px 12px; overflow: hidden;
+}
+.invite-link-text {
+  flex: 1; font-size: 12px; color: var(--ink-2); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.btn-copy {
+  flex: 0 0 auto; background: var(--ink); color: var(--paper); border: none;
+  border-radius: 4px; padding: 5px 10px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.4px; text-transform: uppercase; cursor: pointer; white-space: nowrap;
+}
+.btn-copy:hover { opacity: 0.85; }
+
+/* ---- Create success ---- */
+.create-success {
+  font-size: 13px; font-weight: 700; color: var(--ink); text-align: center; margin: 0 0 4px;
+}
+
+/* ---- Member list ---- */
+.member-list { display: flex; flex-direction: column; gap: 2px; }
+.member-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--line);
+}
+.member-row:last-child { border-bottom: none; }
+.member-name { font-size: 14px; font-weight: 600; }
+.member-admin-tag {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--ink-2); background: var(--line); border-radius: 4px; padding: 3px 7px;
+}
+.btn-remove {
+  background: none; border: 1.5px solid var(--line-2); border-radius: 4px;
+  padding: 4px 10px; font-size: 11px; font-weight: 700; color: var(--accent); cursor: pointer;
+}
+.btn-remove:hover { background: var(--accent-soft); }
+.btn-remove:disabled { color: var(--ink-2); cursor: not-allowed; }
+
+/* ---- Join page ---- */
+.join-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.join-card {
+  background: var(--card); border-radius: 16px; border: 1px solid var(--line-2);
+  padding: 48px 40px 40px; width: 100%; max-width: 380px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.join-crest {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); display: grid; place-items: center; flex: 0 0 auto;
+}
+.join-crest svg { width: 26px; height: 26px; }
+.join-title {
+  font-family: var(--ff-display); font-size: 26px; text-transform: uppercase;
+  letter-spacing: 0.4px; line-height: 1.1; margin: 4px 0 0;
+}
+.join-title em { color: var(--accent); font-style: normal; }
+.join-subtitle {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink-2); margin: 0 0 12px;
+}
+.join-success {
+  font-size: 15px; font-weight: 700; color: var(--ink); margin: 8px 0;
+}
+.join-not-found {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; color: var(--ink-2); margin: 0 0 12px;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 520px) {
   .app { padding: 0 16px 132px; }
   .user-chip .nm { display: none; }
   .login-card { padding: 36px 24px 32px; }
+  .join-card { padding: 36px 24px 32px; }
 }
