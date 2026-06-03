@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { usePredictions } from "../context/PredictionContext";
-import { matches, getTeamInfo } from "../data/dummyData";
+import { matches } from "../data/dummyData";
 import { isMatchLocked, isMatchHidden } from "../data/matchUtils";
+import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
@@ -26,15 +27,6 @@ function groupByLocalDate(matchList) {
     map[m.localDate].push(m);
   }
   return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
-}
-
-function Disc({ teamName }) {
-  const { code, disc, fg } = getTeamInfo(teamName);
-  return (
-    <span className="disc" style={{ background: disc, color: fg }}>
-      {code}
-    </span>
-  );
 }
 
 function Picker({
@@ -82,7 +74,7 @@ function UpcomingCard({ match, prediction, onPick, locked }) {
       </div>
       <div className="fixture">
         <div className="team home">
-          <Disc teamName={match.homeTeam} />
+          <TeamCrest teamName={match.homeTeam} />
           <div>
             <div className="nm">{match.homeTeam}</div>
             <div className="meta">{match.venue}</div>
@@ -90,7 +82,7 @@ function UpcomingCard({ match, prediction, onPick, locked }) {
         </div>
         <span className="vs">VS</span>
         <div className="team away">
-          <Disc teamName={match.awayTeam} />
+          <TeamCrest teamName={match.awayTeam} />
           <div>
             <div className="nm">{match.awayTeam}</div>
             <div className="meta">Avspark {time}</div>

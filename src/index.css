@@ -122,6 +122,7 @@ button { font-family: var(--ff-body); cursor: pointer; }
   display: grid; place-items: center;
   font-family: var(--ff-display); font-size: 12px; letter-spacing: 0.2px;
 }
+.team-crest { width: 34px; height: 34px; flex: 0 0 auto; object-fit: contain; }
 .team .nm { font-weight: 700; font-size: 15px; line-height: 1.1; }
 .team .meta { font-size: 10.5px; color: var(--ink-2); font-weight: 600; margin-top: 1px; }
 .vs { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--ink-2); padding: 0 14px; }

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { matches, getTeamInfo } from '../data/dummyData'
+import { matches } from '../data/dummyData'
 import { usePredictions } from '../context/PredictionContext'
 import { isMatchHidden } from '../data/matchUtils'
+import TeamCrest from '../components/TeamCrest'
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('no', {
@@ -29,15 +30,6 @@ function groupByLocalDate(matchList) {
   return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
 }
 
-function Disc({ teamName }) {
-  const { code, disc, fg } = getTeamInfo(teamName)
-  return (
-    <span className="disc" style={{ background: disc, color: fg }}>
-      {code}
-    </span>
-  )
-}
-
 function PlayedCard({ match, result, prediction }) {
   if (!result) {
     return (
@@ -50,14 +42,14 @@ function PlayedCard({ match, result, prediction }) {
         </div>
         <div className="fixture">
           <div className="team home">
-            <Disc teamName={match.homeTeam} />
+            <TeamCrest teamName={match.homeTeam} />
             <div>
               <div className="nm">{match.homeTeam}</div>
             </div>
           </div>
           <span className="vs">VS</span>
           <div className="team away">
-            <Disc teamName={match.awayTeam} />
+            <TeamCrest teamName={match.awayTeam} />
             <div>
               <div className="nm">{match.awayTeam}</div>
             </div>
@@ -89,7 +81,7 @@ function PlayedCard({ match, result, prediction }) {
       </div>
       <div className="fixture">
         <div className="team home">
-          <Disc teamName={match.homeTeam} />
+          <TeamCrest teamName={match.homeTeam} />
           <div>
             <div className="nm">{match.homeTeam}</div>
           </div>
@@ -98,7 +90,7 @@ function PlayedCard({ match, result, prediction }) {
           {result.home_score} – {result.away_score}
         </span>
         <div className="team away">
-          <Disc teamName={match.awayTeam} />
+          <TeamCrest teamName={match.awayTeam} />
           <div>
             <div className="nm">{match.awayTeam}</div>
           </div>
