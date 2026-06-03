@@ -48,6 +48,7 @@ function deriveResult(winner, homeScore, awayScore) {
 
 async function fetchFinishedMatches() {
   const url = `https://api.football-data.org/v4/competitions/${COMPETITION_CODE}/matches?status=FINISHED`;
+  console.log(`Requesting: ${url}`);
   const res = await fetch(url, { headers: { 'X-Auth-Token': FOOTBALL_DATA_API_TOKEN } });
 
   if (res.status === 401) {
@@ -64,6 +65,7 @@ async function fetchFinishedMatches() {
   }
 
   const data = await res.json();
+  console.log(`API response (${res.status}):`, JSON.stringify(data, null, 2));
   return data.matches ?? [];
 }
 
