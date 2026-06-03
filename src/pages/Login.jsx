@@ -12,7 +12,7 @@ export default function Login() {
         <div className="login-title">VM</div>
         <div className="login-subtitle">Nord-Amerika · Sommeren '26</div>
         <hr className="login-divider" />
-        <button className="btn-google" onClick={login}>
+        <button className="btn-google" onClick={() => login()}>
           <GoogleIcon />
           Logg inn med Google
         </button>
