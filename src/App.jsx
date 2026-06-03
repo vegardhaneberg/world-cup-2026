@@ -8,7 +8,9 @@ import {
 import Login from "./pages/Login";
 import Matches from "./pages/Matches";
 import Leaderboard from "./pages/Leaderboard";
+import PlayedMatches from "./pages/PlayedMatches";
 import { matches } from "./data/dummyData";
+import { isMatchHidden } from "./data/matchUtils";
 
 function BallCrest() {
   return (
@@ -61,8 +63,25 @@ function IconTable() {
   );
 }
 
+function IconHistory() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="1 4 1 10 7 10" />
+      <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
+      <polyline points="12 7 12 12 15 15" />
+    </svg>
+  );
+}
+
 function Coupon({ predictions }) {
-  const upcoming = matches.filter((m) => m.status !== "completed");
+  const upcoming = matches.filter((m) => !isMatchHidden(m));
   const total = upcoming.length;
   const done = upcoming.filter((m) => predictions[m.id]).length;
   const possible = upcoming.reduce((s, m) => {
@@ -138,9 +157,19 @@ function MainView() {
         >
           <IconTable /> Tabellen
         </button>
+        <button
+          className="tab"
+          role="tab"
+          aria-selected={tab === "spilte"}
+          onClick={() => setTab("spilte")}
+        >
+          <IconHistory /> Spilte kamper
+        </button>
       </div>
 
-      {tab === "tip" ? <Matches onPick={predict} /> : <Leaderboard />}
+      {tab === "tip" && <Matches onPick={predict} />}
+      {tab === "tabell" && <Leaderboard />}
+      {tab === "spilte" && <PlayedMatches />}
 
       {tab === "tip" && <Coupon predictions={predictions} />}
     </div>

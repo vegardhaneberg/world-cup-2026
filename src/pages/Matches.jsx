@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { matches, getTeamInfo } from "../data/dummyData";
+import { isMatchLocked, isMatchHidden } from "../data/matchUtils";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
@@ -67,8 +68,9 @@ function Picker({
   );
 }
 
-function UpcomingCard({ match, prediction, onPick }) {
+function UpcomingCard({ match, prediction, onPick, locked }) {
   const time = formatTime(match.date);
+  const outcomeLabel = { home: "H", draw: "U", away: "B" };
   return (
     <div className="match">
       <div className="match-top">
@@ -95,78 +97,39 @@ function UpcomingCard({ match, prediction, onPick }) {
           </div>
         </div>
       </div>
-      <Picker
-        matchId={match.id}
-        pointsHome={match.pointsHome}
-        pointsDraw={match.pointsDraw}
-        pointsAway={match.pointsAway}
-        value={prediction}
-        onPick={onPick}
-      />
+      {locked ? (
+        <div className="match-locked">
+          <span className="match-locked-label">Kampen er i gang</span>
+          {prediction && (
+            <span className="match-locked-pick">{outcomeLabel[prediction]}</span>
+          )}
+        </div>
+      ) : (
+        <Picker
+          matchId={match.id}
+          pointsHome={match.pointsHome}
+          pointsDraw={match.pointsDraw}
+          pointsAway={match.pointsAway}
+          value={prediction}
+          onPick={onPick}
+        />
+      )}
     </div>
   );
 }
 
-function CompletedCard({ match, prediction }) {
-  const resultOutcome = match.result;
-  const correct = prediction && prediction === resultOutcome;
-  const pointsEarned = correct
-    ? prediction === "home"
-      ? match.pointsHome
-      : prediction === "draw"
-        ? match.pointsDraw
-        : match.pointsAway
-    : 0;
-
-  return (
-    <div className="match match--done">
-      <div className="match-top">
-        <span className="grp">Gruppe {match.group}</span>
-        <span className="ko">
-          <b>{formatTime(match.date)}</b> · {match.city}
-        </span>
-      </div>
-      <div className="fixture">
-        <div className="team home">
-          <Disc teamName={match.homeTeam} />
-          <div>
-            <div className="nm">{match.homeTeam}</div>
-          </div>
-        </div>
-        <span className="vs result-score">
-          {match.homeScore} – {match.awayScore}
-        </span>
-        <div className="team away">
-          <Disc teamName={match.awayTeam} />
-          <div>
-            <div className="nm">{match.awayTeam}</div>
-          </div>
-        </div>
-      </div>
-      <div className="result-row">
-        {!prediction && (
-          <span className="result-badge pending">Ikke tippet</span>
-        )}
-        {prediction && correct && (
-          <span className="result-badge correct">✓ +{pointsEarned} p</span>
-        )}
-        {prediction && !correct && (
-          <span className="result-badge wrong">✗ Feil tips</span>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function Matches({ onPick }) {
   const { predictions } = usePredictions();
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  const upcoming = matches.filter((m) => m.status !== "completed");
-  const completed = matches.filter((m) => m.status === "completed");
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
-  const upcomingGrouped = groupByLocalDate(upcoming);
-  const completedGrouped = groupByLocalDate(completed);
+  const visible = matches.filter((m) => !isMatchHidden(m));
+  const grouped = groupByLocalDate(visible);
 
   return (
     <div>
@@ -174,10 +137,10 @@ export default function Matches({ onPick }) {
         <div>
           <h2>Kommende kamper</h2>
         </div>
-        <span className="date-flag">{upcoming.length} kamper</span>
+        <span className="date-flag">{visible.length} kamper</span>
       </div>
 
-      {upcomingGrouped.map(([date, dayMatches]) => (
+      {grouped.map(([date, dayMatches]) => (
         <div key={date}>
           <div className="day-head">{formatDateHeading(date)}</div>
           {dayMatches.map((m) => (
@@ -186,38 +149,14 @@ export default function Matches({ onPick }) {
               match={m}
               prediction={predictions[m.id]}
               onPick={onPick}
+              locked={isMatchLocked(m)}
             />
           ))}
         </div>
       ))}
 
-      {completed.length > 0 && (
-        <div style={{ marginTop: 32, marginBottom: 16 }}>
-          <button
-            className="toggle-completed"
-            onClick={() => setShowCompleted((v) => !v)}
-          >
-            {showCompleted
-              ? "↑ Skjul tidligere kamper"
-              : `↓ Vis ${completed.length} tidligere kamp${completed.length !== 1 ? "er" : ""}`}
-          </button>
-
-          {showCompleted &&
-            completedGrouped.map(([date, dayMatches]) => (
-              <div key={date}>
-                <div className="day-head" style={{ marginTop: 20 }}>
-                  {formatDateHeading(date)}
-                </div>
-                {dayMatches.map((m) => (
-                  <CompletedCard
-                    key={m.id}
-                    match={m}
-                    prediction={predictions[m.id]}
-                  />
-                ))}
-              </div>
-            ))}
-        </div>
+      {visible.length === 0 && (
+        <p className="lb-empty-note">Alle kamper er spilt.</p>
       )}
     </div>
   );
