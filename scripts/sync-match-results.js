@@ -20,10 +20,10 @@ const COMPETITION_CODE = 'WC';
 // Extend this map as new mismatches are discovered during the tournament.
 const API_TO_LOCAL_NAME = {
   'United States': 'USA',
-  "Côte d'Ivoire": 'Ivory Coast',
+  'Czechia': 'Czech Republic',
   'Congo DR': 'DR Congo',
   'Bosnia-Herzegovina': 'Bosnia & Herzegovina',
-  'Cabo Verde': 'Cape Verde',
+  'Cape Verde Islands': 'Cape Verde',
 };
 
 function normalizeName(name) {

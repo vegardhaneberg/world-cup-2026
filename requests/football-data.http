@@ -1,0 +1,8 @@
+### Football Data API Requests
+GET https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED
+X-Auth-Token: {{$dotenv apiKey}}
+
+###
+# Finished matches
+GET https://api.football-data.org/v4/competitions/WC/matches
+X-Auth-Token: {{$dotenv apiKey}}

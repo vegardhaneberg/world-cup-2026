@@ -39,4 +39,5 @@ pnpm-debug.log*
 # Claude (keep settings but not sensitive local overrides)
 .claude/settings.local.json
 .claude/tasks
-
+requests/.env
+src/data/football-data-apiresponse-sample.json
