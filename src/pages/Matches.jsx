@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { matches } from "../data/dummyData";
-import { isMatchLocked, isMatchHidden } from "../data/matchUtils";
+import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
@@ -60,11 +60,38 @@ function Picker({
   );
 }
 
-function UpcomingCard({ match, prediction, onPick, locked }) {
+const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, locked, isWarning }) {
   const time = formatTime(match.date);
   const outcomeLabel = { home: "H", draw: "U", away: "B" };
+
+  const [msLeft, setMsLeft] = useState(0);
+
+  useEffect(() => {
+    if (!isWarning) return;
+    const lockTime = new Date(match.date).getTime() - 5 * 60 * 1000;
+    const tick = () => {
+      const remaining = Math.max(0, lockTime - Date.now());
+      setMsLeft(remaining);
+      if (remaining === 0) clearInterval(id);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isWarning, match.date]);
+
+  const effectiveLocked = locked || isMatchLocked(match);
+
+  const countdownDisplay = (() => {
+    const minutes = Math.floor(msLeft / 60000);
+    const seconds = Math.floor((msLeft % 60000) / 1000);
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  })();
+
   return (
     <div className="match">
+      {isWarning && msLeft > 0 && (
+        <div className="match-warning-banner">Låses om {countdownDisplay}</div>
+      )}
       <div className="match-top">
         <span className="grp">Gruppe {match.group}</span>
         {match.isEven && <span className="hardflag">Jevn kamp</span>}
@@ -89,7 +116,7 @@ function UpcomingCard({ match, prediction, onPick, locked }) {
           </div>
         </div>
       </div>
-      {locked ? (
+      {effectiveLocked ? (
         <div className="match-locked">
           <span className="match-locked-label">Kampen er i gang</span>
           {prediction && (
@@ -108,7 +135,7 @@ function UpcomingCard({ match, prediction, onPick, locked }) {
       )}
     </div>
   );
-}
+});
 
 
 export default function Matches({ onPick }) {
@@ -142,6 +169,7 @@ export default function Matches({ onPick }) {
               prediction={predictions[m.id]}
               onPick={onPick}
               locked={isMatchLocked(m)}
+              isWarning={isMatchWarning(m)}
             />
           ))}
         </div>

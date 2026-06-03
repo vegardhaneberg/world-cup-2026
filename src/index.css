@@ -103,6 +103,12 @@ button { font-family: var(--ff-body); cursor: pointer; }
   border: 1px solid var(--line-2); border-radius: var(--r);
   margin-bottom: 12px; overflow: hidden;
 }
+.match-warning-banner {
+  background: #f59e0b; color: #fff;
+  text-align: center; padding: 6px 16px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+}
+
 .match-top {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 16px; border-bottom: 1px solid var(--line);
