@@ -404,6 +404,31 @@ button { font-family: var(--ff-body); cursor: pointer; }
   text-transform: uppercase; color: var(--ink-2); margin: 0;
 }
 
+/* ---- Pill nav with section labels ---- */
+.pill-nav { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+.pill-group { display: flex; flex-direction: column; gap: 8px; }
+.pill-section-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.liga-empty-inline {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.liga-empty-inline-text {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--ink-2);
+}
+.liga-empty-inline .btn-accent {
+  padding: 7px 14px; font-size: 11px;
+}
+
+/* ---- Overall leaderboard ellipsis ---- */
+.lb-ellipsis {
+  text-align: center; padding: 6px 0;
+  font-size: 16px; color: var(--ink-2); letter-spacing: 2px;
+  border-bottom: 1px solid var(--line);
+}
+
 /* ---- Shared button ---- */
 .btn-accent {
   background: var(--accent); color: #fff; border: none; border-radius: 6px;

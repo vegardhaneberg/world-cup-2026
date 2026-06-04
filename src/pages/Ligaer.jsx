@@ -4,42 +4,7 @@ import { useMatches } from '../context/MatchContext'
 import { supabase } from '../lib/supabase'
 import CreateLeagueModal from '../components/CreateLeagueModal'
 import LeagueSettingsModal from '../components/LeagueSettingsModal'
-
-function computeLeaderboard(profiles, allPredictions, playedMatches) {
-  const resultMap = Object.fromEntries(playedMatches.map(m => [m.id, m]))
-  const playedMatchIds = new Set(playedMatches.map(m => m.id))
-
-  const predByUser = {}
-  for (const p of allPredictions) {
-    if (!predByUser[p.user_id]) predByUser[p.user_id] = {}
-    predByUser[p.user_id][p.match_id] = p.outcome
-  }
-
-  return profiles.map(profile => {
-    const userPreds = predByUser[profile.user_id] ?? {}
-    let score = 0
-    let correct = 0
-
-    for (const matchId of playedMatchIds) {
-      const m = resultMap[matchId]
-      const pred = userPreds[matchId]
-      if (pred && pred === m.result) {
-        correct++
-        if (pred === 'home') score += m.pointsHome
-        else if (pred === 'draw') score += m.pointsDraw
-        else score += m.pointsAway
-      }
-    }
-
-    return {
-      userId: profile.user_id,
-      name: profile.full_name ?? profile.email ?? 'Ukjent',
-      score,
-      correct,
-      played: playedMatchIds.size,
-    }
-  }).sort((a, b) => b.score - a.score || b.correct - a.correct)
-}
+import { computeLeaderboard } from '../data/leaderboard'
 
 function GearIcon() {
   return (
@@ -54,9 +19,11 @@ export default function Ligaer() {
   const { user } = useAuth()
   const { matches } = useMatches()
   const [leagues, setLeagues] = useState(null)
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState('overall')
   const [leagueData, setLeagueData] = useState({})
   const [loadingLeague, setLoadingLeague] = useState(false)
+  const [overallData, setOverallData] = useState(null)
+  const [loadingOverall, setLoadingOverall] = useState(false)
   const [fetchError, setFetchError] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -73,7 +40,6 @@ export default function Ligaer() {
 
     const list = (data ?? []).map(row => row.leagues).filter(Boolean)
     setLeagues(list)
-    if (list.length > 0) setSelectedId(id => id ?? list[0].id)
   }
 
   async function fetchLeagueData(leagueId) {
@@ -110,18 +76,45 @@ export default function Ligaer() {
     setLoadingLeague(false)
   }
 
+  async function fetchOverallData() {
+    setLoadingOverall(true)
+    const [profilesRes, predsRes] = await Promise.all([
+      supabase.from('profiles').select('user_id, full_name, email'),
+      supabase.from('predictions').select('user_id, match_id, outcome'),
+    ])
+
+    if (profilesRes.error || predsRes.error) { setLoadingOverall(false); return }
+
+    const usersWithPreds = new Set(predsRes.data.map(p => p.user_id))
+    const filteredProfiles = profilesRes.data.filter(p => usersWithPreds.has(p.user_id))
+
+    const playedMatches = matches.filter(m => m.result !== null)
+    setOverallData({
+      rows: computeLeaderboard(filteredProfiles, predsRes.data, playedMatches),
+      playedCount: playedMatches.length,
+    })
+    setLoadingOverall(false)
+  }
+
   useEffect(() => {
     fetchLeagues()
+    fetchOverallData()
 
     intervalRef.current = setInterval(() => {
-      setSelectedId(id => { if (id) fetchLeagueData(id); return id })
+      setSelectedId(id => {
+        if (id === 'overall') fetchOverallData()
+        else if (id) fetchLeagueData(id)
+        return id
+      })
     }, 60_000)
 
     return () => clearInterval(intervalRef.current)
   }, [user])
 
   useEffect(() => {
-    if (selectedId && !leagueData[selectedId]) fetchLeagueData(selectedId)
+    if (selectedId && selectedId !== 'overall' && !leagueData[selectedId]) {
+      fetchLeagueData(selectedId)
+    }
   }, [selectedId])
 
   function handleLeagueCreated(league) {
@@ -163,87 +156,157 @@ export default function Ligaer() {
   if (fetchError) return <div>{header}<p className="lb-empty-note">{fetchError}</p></div>
   if (leagues === null) return <div>{header}<div className="lb-loading">Laster ligaer…</div></div>
 
-  const selectedLeague = leagues.find(l => l.id === selectedId)
+  const selectedLeague = selectedId !== 'overall' ? leagues.find(l => l.id === selectedId) : null
   const isAdmin = selectedLeague?.created_by === user?.id
-  const current = selectedId ? leagueData[selectedId] : null
+  const current = selectedId !== 'overall' ? leagueData[selectedId] : null
   const playedCount = current?.rows[0]?.played ?? 0
-
-  if (leagues.length === 0) {
-    return (
-      <div>
-        {header}
-        <div className="liga-empty">
-          <p className="liga-empty-text">Du er ikke med i noen liga ennå.</p>
-          <button className="btn-accent" onClick={() => setShowCreate(true)}>
-            Opprett en liga
-          </button>
-        </div>
-        {showCreate && (
-          <CreateLeagueModal onClose={() => setShowCreate(false)} onCreated={handleLeagueCreated} />
-        )}
-      </div>
-    )
-  }
 
   return (
     <div>
       {header}
 
-      <div className="league-pills">
-        {leagues.map(l => (
-          <button
-            key={l.id}
-            className={`league-pill${selectedId === l.id ? ' active' : ''}`}
-            onClick={() => setSelectedId(l.id)}
-          >
-            {l.name}
-          </button>
-        ))}
-      </div>
-
-      {selectedLeague && (
-        <div className="league-head">
-          <span className="league-head-name">{selectedLeague.name}</span>
-          {isAdmin && (
-            <button className="btn-gear" onClick={() => setShowSettings(true)} title="Ligainnstillinger">
-              <GearIcon />
+      <div className="pill-nav">
+        <div className="pill-group">
+          <div className="pill-section-label">OVERALL</div>
+          <div className="league-pills">
+            <button
+              className={`league-pill${selectedId === 'overall' ? ' active' : ''}`}
+              onClick={() => setSelectedId('overall')}
+            >
+              Overall
             </button>
-          )}
+          </div>
         </div>
-      )}
 
-      {loadingLeague && !current ? (
-        <div className="lb-loading">Laster…</div>
-      ) : current ? (
-        <>
-          {current.rows.length === 0 ? (
-            <p className="lb-empty-note">Ingen spillere ennå.</p>
+        <div className="pill-group">
+          <div className="pill-section-label">DINE LIGAER</div>
+          {leagues.length === 0 ? (
+            <div className="liga-empty-inline">
+              <span className="liga-empty-inline-text">Du er ikke med i noen liga ennå.</span>
+              <button className="btn-accent" onClick={() => setShowCreate(true)}>
+                Opprett liga
+              </button>
+            </div>
           ) : (
-            <div className="lb-list">
-              {current.rows.map((row, i) => {
-                const isMe = row.userId === user?.id
-                return (
-                  <div key={row.userId} className={`lb-row${isMe ? ' me' : ''}`}>
-                    <span className="rk">{i + 1}</span>
-                    <div className="who">
-                      <div className="nm">
-                        {row.name}
-                        {isMe && <span className="you-tag">Deg</span>}
-                      </div>
-                      <div className="st">{row.correct} av {playedCount} rette</div>
-                    </div>
-                    <span className="trend fl">–</span>
-                    <span className="score">{row.score}</span>
-                  </div>
-                )
-              })}
+            <div className="league-pills">
+              {leagues.map(l => (
+                <button
+                  key={l.id}
+                  className={`league-pill${selectedId === l.id ? ' active' : ''}`}
+                  onClick={() => setSelectedId(l.id)}
+                >
+                  {l.name}
+                </button>
+              ))}
             </div>
           )}
-          {playedCount === 0 && (
-            <p className="lb-empty-note">Tabellen oppdateres når kampene er spilt.</p>
-          )}
+        </div>
+      </div>
+
+      {selectedId === 'overall' ? (
+        <>
+          {loadingOverall && !overallData ? (
+            <div className="lb-loading">Laster…</div>
+          ) : overallData ? (
+            <>
+              {overallData.rows.length === 0 ? (
+                <p className="lb-empty-note">Ingen spillere ennå.</p>
+              ) : (
+                <div className="lb-list">
+                  {overallData.rows.slice(0, 20).map((row, i) => {
+                    const isMe = row.userId === user?.id
+                    return (
+                      <div key={row.userId} className={`lb-row${isMe ? ' me' : ''}`}>
+                        <span className="rk">{i + 1}</span>
+                        <div className="who">
+                          <div className="nm">
+                            {row.name}
+                            {isMe && <span className="you-tag">Deg</span>}
+                          </div>
+                          <div className="st">{row.correct} av {overallData.playedCount} rette</div>
+                        </div>
+                        <span className="trend fl">–</span>
+                        <span className="score">{row.score}</span>
+                      </div>
+                    )
+                  })}
+                  {(() => {
+                    const myIndex = overallData.rows.findIndex(r => r.userId === user?.id)
+                    if (myIndex < 20) return null
+                    const myRow = overallData.rows[myIndex]
+                    return (
+                      <>
+                        <div className="lb-ellipsis">…</div>
+                        <div className="lb-row me">
+                          <span className="rk">{myIndex + 1}</span>
+                          <div className="who">
+                            <div className="nm">
+                              {myRow.name}
+                              <span className="you-tag">Deg</span>
+                            </div>
+                            <div className="st">{myRow.correct} av {overallData.playedCount} rette</div>
+                          </div>
+                          <span className="trend fl">–</span>
+                          <span className="score">{myRow.score}</span>
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+              {overallData.playedCount === 0 && (
+                <p className="lb-empty-note">Tabellen oppdateres når kampene er spilt.</p>
+              )}
+            </>
+          ) : null}
         </>
-      ) : null}
+      ) : (
+        <>
+          {selectedLeague && (
+            <div className="league-head">
+              <span className="league-head-name">{selectedLeague.name}</span>
+              {isAdmin && (
+                <button className="btn-gear" onClick={() => setShowSettings(true)} title="Ligainnstillinger">
+                  <GearIcon />
+                </button>
+              )}
+            </div>
+          )}
+
+          {loadingLeague && !current ? (
+            <div className="lb-loading">Laster…</div>
+          ) : current ? (
+            <>
+              {current.rows.length === 0 ? (
+                <p className="lb-empty-note">Ingen spillere ennå.</p>
+              ) : (
+                <div className="lb-list">
+                  {current.rows.map((row, i) => {
+                    const isMe = row.userId === user?.id
+                    return (
+                      <div key={row.userId} className={`lb-row${isMe ? ' me' : ''}`}>
+                        <span className="rk">{i + 1}</span>
+                        <div className="who">
+                          <div className="nm">
+                            {row.name}
+                            {isMe && <span className="you-tag">Deg</span>}
+                          </div>
+                          <div className="st">{row.correct} av {playedCount} rette</div>
+                        </div>
+                        <span className="trend fl">–</span>
+                        <span className="score">{row.score}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              {playedCount === 0 && (
+                <p className="lb-empty-note">Tabellen oppdateres når kampene er spilt.</p>
+              )}
+            </>
+          ) : null}
+        </>
+      )}
 
       {showCreate && (
         <CreateLeagueModal onClose={() => setShowCreate(false)} onCreated={handleLeagueCreated} />
