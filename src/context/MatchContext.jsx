@@ -8,8 +8,6 @@ const MatchContext = createContext(null)
 function transformMatch(row, oddsMap) {
   const oddsRow = oddsMap ? oddsMap.get(row.id) : null
   const pts = getMatchPoints(row.home_team, row.away_team, oddsRow)
-  const isEven = pts.oddsH != null && pts.oddsB != null
-    && Math.min(pts.oddsH, pts.oddsB) >= 2.4
 
   // Local date in Oslo timezone (YYYY-MM-DD)
   const localDate = new Date(row.utc_date).toLocaleDateString('sv', { timeZone: 'Europe/Oslo' })
@@ -39,7 +37,7 @@ function transformMatch(row, oddsMap) {
     pointsHome: pts.home,
     pointsDraw: pts.draw,
     pointsAway: pts.away,
-    isEven,
+    oddsUpdatedAt: oddsRow?.fetched_at ?? null,
   }
 }
 

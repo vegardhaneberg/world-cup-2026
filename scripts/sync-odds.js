@@ -70,6 +70,14 @@ async function main() {
       continue;
     }
 
+    const match = matches.find(m => m.id === matchId);
+    const minutesToKickoff = (new Date(match.utc_date) - Date.now()) / 60_000;
+    if (minutesToKickoff < 30) {
+      console.log(`SKIP match_id=${matchId} — kicks off in ${Math.round(minutesToKickoff)} min (${entry.home_team} vs ${entry.away_team})`);
+      skipped++;
+      continue;
+    }
+
     const homeOdds = avgH2HOdds(entry.bookmakers, entry.home_team);
     const drawOdds = avgH2HOdds(entry.bookmakers, 'Draw');
     const awayOdds = avgH2HOdds(entry.bookmakers, entry.away_team);

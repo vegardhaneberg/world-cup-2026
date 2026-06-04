@@ -1,11 +1,21 @@
 import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
-import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
+import { isMatchLocked, isMatchHidden, isMatchWarning, isOddsLocked } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Oslo",
+  });
+}
+
+function formatOddsTime(ts) {
+  return new Date(ts).toLocaleString("no", {
+    day: "numeric",
+    month: "long",
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Oslo",
@@ -94,7 +104,12 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
       )}
       <div className="match-top">
         <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
-        {match.isEven && <span className="hardflag">Jevn kamp</span>}
+        {!match.oddsUpdatedAt
+          ? <span className="odds-chip">Odds ikke satt</span>
+          : isOddsLocked(match)
+            ? <span className="odds-chip odds-chip--locked">Odd låst {formatOddsTime(match.oddsUpdatedAt)}</span>
+            : <span className="odds-chip">Odds oppdatert {formatOddsTime(match.oddsUpdatedAt)}</span>
+        }
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
