@@ -2,10 +2,7 @@ name: Sync Match Results
 
 on:
   schedule:
-    # Every 5 minutes during match hours: 15:00–08:59 UTC
-    # Earliest kick-off: 12:00 UTC-4 = 16:00 UTC
-    # Latest possible finish (with extra time): ~06:00 UTC
-    - cron: "*/5 12-23,0-8 * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: # Allow manual runs from the Actions tab
 
 jobs:
