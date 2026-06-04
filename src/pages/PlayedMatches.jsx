@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../lib/supabase'
-import { matches } from '../data/dummyData'
+import { useMatches } from '../context/MatchContext'
 import { usePredictions } from '../context/PredictionContext'
 import { isMatchHidden } from '../data/matchUtils'
 import TeamCrest from '../components/TeamCrest'
@@ -30,12 +28,14 @@ function groupByLocalDate(matchList) {
   return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
 }
 
-function PlayedCard({ match, result, prediction }) {
-  if (!result) {
+function PlayedCard({ match, prediction }) {
+  const hasResult = match.result !== null
+
+  if (!hasResult) {
     return (
       <div className="match match--done">
         <div className="match-top">
-          <span className="grp">Gruppe {match.group}</span>
+          <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
           <span className="ko">
             <b>{formatTime(match.date)}</b> · {match.city}
           </span>
@@ -62,7 +62,7 @@ function PlayedCard({ match, result, prediction }) {
     )
   }
 
-  const correct = prediction && prediction === result.result
+  const correct = prediction && prediction === match.result
   const pointsEarned = correct
     ? prediction === 'home'
       ? match.pointsHome
@@ -74,7 +74,7 @@ function PlayedCard({ match, result, prediction }) {
   return (
     <div className="match match--done">
       <div className="match-top">
-        <span className="grp">Gruppe {match.group}</span>
+        <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
         <span className="ko">
           <b>{formatTime(match.date)}</b> · {match.city}
         </span>
@@ -87,7 +87,7 @@ function PlayedCard({ match, result, prediction }) {
           </div>
         </div>
         <span className="vs result-score">
-          {result.home_score} – {result.away_score}
+          {match.homeScore} – {match.awayScore}
         </span>
         <div className="team away">
           <TeamCrest teamName={match.awayTeam} />
@@ -113,38 +113,8 @@ function PlayedCard({ match, result, prediction }) {
 
 export default function PlayedMatches() {
   const { predictions } = usePredictions()
-  const [results, setResults] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(null)
-  const channelRef = useRef(null)
+  const { matches, loading } = useMatches()
 
-  async function fetchResults() {
-    const { data, error } = await supabase
-      .from('match_results')
-      .select('match_id, home_score, away_score, result')
-
-    if (error) {
-      setFetchError('Kunne ikke laste resultater.')
-      return
-    }
-    setResults(data)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchResults()
-
-    channelRef.current = supabase
-      .channel('played_match_results')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'match_results' }, fetchResults)
-      .subscribe()
-
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-    }
-  }, [])
-
-  const resultMap = Object.fromEntries(results.map(r => [r.match_id, r]))
   const played = matches.filter(m => isMatchHidden(m))
   const grouped = groupByLocalDate(played)
 
@@ -157,12 +127,8 @@ export default function PlayedMatches() {
     </div>
   )
 
-  if (fetchError) {
-    return <div>{header}<p className="lb-empty-note">{fetchError}</p></div>
-  }
-
-  if (loading && played.length > 0) {
-    return <div>{header}<div className="lb-loading">Laster resultater…</div></div>
+  if (loading) {
+    return <div>{header}<div className="lb-loading">Laster kamper…</div></div>
   }
 
   if (played.length === 0) {
@@ -184,7 +150,6 @@ export default function PlayedMatches() {
             <PlayedCard
               key={m.id}
               match={m}
-              result={resultMap[m.id] ?? null}
               prediction={predictions[m.id]}
             />
           ))}

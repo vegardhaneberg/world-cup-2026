@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
-import { matches } from "../data/dummyData";
+import { useMatches } from "../context/MatchContext";
 import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
@@ -93,7 +93,7 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
         <div className="match-warning-banner">Låses om {countdownDisplay}</div>
       )}
       <div className="match-top">
-        <span className="grp">Gruppe {match.group}</span>
+        <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
         {match.isEven && <span className="hardflag">Jevn kamp</span>}
         <span className="ko">
           <b>{time}</b> · {match.city}
@@ -140,6 +140,7 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
 
 export default function Matches({ onPick }) {
   const { predictions } = usePredictions();
+  const { matches } = useMatches();
   const [tick, setTick] = useState(0);
 
   useEffect(() => {

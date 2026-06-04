@@ -1,9 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const { FOOTBALL_DATA_API_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
@@ -16,8 +11,6 @@ if (!FOOTBALL_DATA_API_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 // Verify this code for 2026 — it may differ. Check https://www.football-data.org/v4/competitions
 const COMPETITION_CODE = 'WC';
 
-// Maps football-data.org team names → names used in matches.json
-// Extend this map as new mismatches are discovered during the tournament.
 const API_TO_LOCAL_NAME = {
   'United States': 'USA',
   'Czechia': 'Czech Republic',
@@ -28,12 +21,6 @@ const API_TO_LOCAL_NAME = {
 
 function normalizeName(name) {
   return API_TO_LOCAL_NAME[name] ?? name;
-}
-
-// Placeholders like "2A", "W73", "L101", "3A/B/C" appear in knockout-round slots
-// before the teams are determined. We can't match these to API responses by name.
-function isPlaceholder(name) {
-  return /^(\d|[WL]\d)/.test(name);
 }
 
 function deriveResult(winner, homeScore, awayScore) {
@@ -69,23 +56,8 @@ async function fetchFinishedMatches() {
   return data.matches ?? [];
 }
 
-function buildLocalLookup() {
-  const raw = readFileSync(join(__dirname, '../src/data/matches.json'), 'utf8');
-  const { matches } = JSON.parse(raw);
-
-  // Map "NormTeam1|NormTeam2" → 1-based match_id (index in matches array)
-  const lookup = new Map();
-  matches.forEach((match, i) => {
-    if (isPlaceholder(match.team1) || isPlaceholder(match.team2)) return;
-    const key = `${match.team1}|${match.team2}`;
-    lookup.set(key, i + 1);
-  });
-  return lookup;
-}
-
 async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const localLookup = buildLocalLookup();
 
   console.log(`Fetching finished matches for competition "${COMPETITION_CODE}"…`);
   const apiMatches = await fetchFinishedMatches();
@@ -100,22 +72,10 @@ async function main() {
   let skipped = 0;
 
   for (const apiMatch of apiMatches) {
-    const homeTeamRaw = apiMatch.homeTeam?.name ?? '';
-    const awayTeamRaw = apiMatch.awayTeam?.name ?? '';
-    const homeTeam = normalizeName(homeTeamRaw);
-    const awayTeam = normalizeName(awayTeamRaw);
-
-    const matchId = localLookup.get(`${homeTeam}|${awayTeam}`);
-    if (!matchId) {
-      console.warn(`SKIP: no local match for "${homeTeamRaw}" vs "${awayTeamRaw}" (normalized: "${homeTeam}" vs "${awayTeam}")`);
-      skipped++;
-      continue;
-    }
-
     const homeScore = apiMatch.score?.fullTime?.home;
     const awayScore = apiMatch.score?.fullTime?.away;
     if (homeScore == null || awayScore == null) {
-      console.warn(`SKIP: missing score for match_id ${matchId} ("${homeTeam}" vs "${awayTeam}")`);
+      console.warn(`SKIP: missing score for match ID ${apiMatch.id}`);
       skipped++;
       continue;
     }
@@ -123,17 +83,37 @@ async function main() {
     const result = deriveResult(apiMatch.score?.winner, homeScore, awayScore);
     const playedAt = apiMatch.utcDate ?? new Date().toISOString();
 
-    const { error } = await supabase.from('match_results').upsert(
-      { match_id: matchId, home_score: homeScore, away_score: awayScore, result, played_at: playedAt },
-      { onConflict: 'match_id' }
+    // Upsert the full match row so this script is self-contained even if
+    // sync-matches.js hasn't run yet. Score/result columns are the priority;
+    // schedule columns are included to satisfy NOT NULL constraints on insert.
+    const homeTeam = normalizeName(apiMatch.homeTeam?.name ?? '');
+    const awayTeam = normalizeName(apiMatch.awayTeam?.name ?? '');
+
+    const { error } = await supabase.from('matches').upsert(
+      {
+        id: apiMatch.id,
+        utc_date: apiMatch.utcDate,
+        status: 'FINISHED',
+        stage: apiMatch.stage,
+        group: apiMatch.group ?? null,
+        matchday: apiMatch.matchday ?? null,
+        home_team: homeTeam,
+        away_team: awayTeam,
+        venue: null,
+        last_updated: apiMatch.lastUpdated ?? null,
+        home_score: homeScore,
+        away_score: awayScore,
+        result,
+        played_at: playedAt,
+      },
+      { onConflict: 'id' }
     );
 
     if (error) {
-      // Log and continue — a single failure shouldn't block other matches
-      console.error(`ERROR upserting match_id ${matchId} ("${homeTeam}" vs "${awayTeam}"): ${error.message}`);
+      console.error(`ERROR upserting match ${apiMatch.id} (${homeTeam} vs ${awayTeam}): ${error.message}`);
       skipped++;
     } else {
-      console.log(`OK match_id=${matchId} ${homeTeam} ${homeScore}–${awayScore} ${awayTeam} (${result})`);
+      console.log(`OK id=${apiMatch.id} ${homeTeam} ${homeScore}–${awayScore} ${awayTeam} (${result})`);
       upserted++;
     }
   }

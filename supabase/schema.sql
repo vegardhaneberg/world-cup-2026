@@ -94,37 +94,55 @@ create trigger on_auth_user_created
   for each row execute procedure public.sync_profile();
 
 
--- 3. MATCH RESULTS
--- Filled in by an admin when a match is played.
--- match_id corresponds to the sequential id in the app's matches.json
---   (1 = first group match, 2 = second, etc.)
--- Everyone can read; only service-role / dashboard can insert.
+-- 3. MATCHES
+-- Single source of truth for schedule and results.
+-- Populated by sync-matches.js (schedule) and sync-match-results.js (scores).
+-- match_id in predictions references matches.id (football-data.org match ID).
 -- ---------------------------------------------------------------
-create table if not exists public.match_results (
-  match_id   integer primary key,
-  home_score integer not null,
-  away_score integer not null,
-  result     text check (result in ('home', 'draw', 'away')) not null,
-  played_at  timestamptz default now() not null
+create table if not exists public.matches (
+  id            integer primary key,  -- football-data.org match ID
+  utc_date      timestamptz not null,
+  status        text not null,        -- TIMED, IN_PLAY, FINISHED, POSTPONED, etc.
+  stage         text not null,        -- GROUP_STAGE, ROUND_OF_16, etc.
+  "group"       text,                 -- GROUP_A … GROUP_L, null for knockouts
+  matchday      integer,
+  home_team     text not null,
+  away_team     text not null,
+  venue         text,
+  last_updated  timestamptz,
+  home_score    integer,              -- null until match is finished
+  away_score    integer,
+  result        text check (result in ('home', 'draw', 'away')),
+  played_at     timestamptz
 );
 
-alter table public.match_results enable row level security;
+alter table public.matches enable row level security;
 
-drop policy if exists "Anyone can read match results" on public.match_results;
-create policy "Anyone can read match results"
-  on public.match_results for select
+drop policy if exists "Anyone can read matches" on public.matches;
+create policy "Anyone can read matches"
+  on public.matches for select
   using (true);
 
--- Enable realtime so the leaderboard updates instantly when results are entered
-alter publication supabase_realtime add table public.match_results;
+-- Enable realtime so the frontend updates instantly when results are synced
+alter publication supabase_realtime add table public.matches;
 
 
--- ============================================================
--- To record a result (run from SQL Editor or a future admin UI):
---
---   insert into match_results (match_id, home_score, away_score, result)
---   values (1, 2, 1, 'home');
---
--- match_id 1 = Mexico vs South Africa (first entry in matches.json)
--- result must be 'home', 'draw', or 'away'
--- ============================================================
+-- 4. FK: predictions.match_id → matches.id
+-- ---------------------------------------------------------------
+-- MIGRATION NOTE: When applying this to an existing database, you must first:
+--   1. Clear old predictions: DELETE FROM predictions;
+--   2. Populate the matches table: node scripts/sync-matches.js
+--   3. Then run this ALTER to add the FK constraint.
+-- Existing predictions reference old sequential IDs (1, 2, 3…) and must be cleared.
+
+alter table public.predictions
+  drop constraint if exists predictions_match_id_fkey;
+
+alter table public.predictions
+  add constraint predictions_match_id_fkey
+  foreign key (match_id) references public.matches(id) on delete cascade;
+
+
+-- 5. DROP legacy match_results table
+-- ---------------------------------------------------------------
+drop table if exists public.match_results;

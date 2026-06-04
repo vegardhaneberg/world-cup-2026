@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useMatches } from '../context/MatchContext'
 import { supabase } from '../lib/supabase'
-import { matches } from '../data/dummyData'
 import CreateLeagueModal from '../components/CreateLeagueModal'
 import LeagueSettingsModal from '../components/LeagueSettingsModal'
 
-const MATCH_MAP = Object.fromEntries(matches.map(m => [m.id, m]))
-
-function computeLeaderboard(profiles, allPredictions, results) {
-  const resultMap = Object.fromEntries(results.map(r => [r.match_id, r]))
-  const playedMatchIds = new Set(results.map(r => r.match_id))
+function computeLeaderboard(profiles, allPredictions, playedMatches) {
+  const resultMap = Object.fromEntries(playedMatches.map(m => [m.id, m]))
+  const playedMatchIds = new Set(playedMatches.map(m => m.id))
 
   const predByUser = {}
   for (const p of allPredictions) {
@@ -23,16 +21,13 @@ function computeLeaderboard(profiles, allPredictions, results) {
     let correct = 0
 
     for (const matchId of playedMatchIds) {
-      const result = resultMap[matchId]
+      const m = resultMap[matchId]
       const pred = userPreds[matchId]
-      if (pred && pred === result.result) {
+      if (pred && pred === m.result) {
         correct++
-        const m = MATCH_MAP[matchId]
-        if (m) {
-          if (pred === 'home') score += m.pointsHome
-          else if (pred === 'draw') score += m.pointsDraw
-          else score += m.pointsAway
-        }
+        if (pred === 'home') score += m.pointsHome
+        else if (pred === 'draw') score += m.pointsDraw
+        else score += m.pointsAway
       }
     }
 
@@ -57,6 +52,7 @@ function GearIcon() {
 
 export default function Ligaer() {
   const { user } = useAuth()
+  const { matches } = useMatches()
   const [leagues, setLeagues] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [leagueData, setLeagueData] = useState({})
@@ -64,7 +60,6 @@ export default function Ligaer() {
   const [fetchError, setFetchError] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const channelRef = useRef(null)
   const intervalRef = useRef(null)
 
   async function fetchLeagues() {
@@ -97,18 +92,18 @@ export default function Ligaer() {
       return
     }
 
-    const [profilesRes, predsRes, resultsRes] = await Promise.all([
+    const [profilesRes, predsRes] = await Promise.all([
       supabase.from('profiles').select('user_id, full_name, email').in('user_id', memberIds),
       supabase.from('predictions').select('user_id, match_id, outcome').in('user_id', memberIds),
-      supabase.from('match_results').select('match_id, result'),
     ])
 
-    if (profilesRes.error || predsRes.error || resultsRes.error) { setLoadingLeague(false); return }
+    if (profilesRes.error || predsRes.error) { setLoadingLeague(false); return }
 
+    const playedMatches = matches.filter(m => m.result !== null)
     setLeagueData(prev => ({
       ...prev,
       [leagueId]: {
-        rows: computeLeaderboard(profilesRes.data, predsRes.data, resultsRes.data),
+        rows: computeLeaderboard(profilesRes.data, predsRes.data, playedMatches),
         profiles: profilesRes.data,
       }
     }))
@@ -118,21 +113,11 @@ export default function Ligaer() {
   useEffect(() => {
     fetchLeagues()
 
-    channelRef.current = supabase
-      .channel('ligaer_results')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'match_results' }, () => {
-        setSelectedId(id => { if (id) fetchLeagueData(id); return id })
-      })
-      .subscribe()
-
     intervalRef.current = setInterval(() => {
       setSelectedId(id => { if (id) fetchLeagueData(id); return id })
     }, 60_000)
 
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-      clearInterval(intervalRef.current)
-    }
+    return () => clearInterval(intervalRef.current)
   }, [user])
 
   useEffect(() => {

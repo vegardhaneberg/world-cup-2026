@@ -1,9 +1,7 @@
-name: Sync Match Results
+name: Sync Match Schedule
 
 on:
-  schedule:
-    - cron: "*/5 12-23,0-8 * * *" # Only during match hours (UTC)
-  workflow_dispatch: # Allow manual runs from the Actions tab
+  workflow_dispatch: # Triggered externally via GitHub API
 
 jobs:
   sync:
@@ -19,8 +17,8 @@ jobs:
       - name: Install dependencies
         run: npm ci --omit=dev
 
-      - name: Sync finished match results
-        run: node scripts/sync-match-results.js
+      - name: Sync match schedule
+        run: node scripts/sync-matches.js
         env:
           FOOTBALL_DATA_API_TOKEN: ${{ secrets.FOOTBALL_DATA_API_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

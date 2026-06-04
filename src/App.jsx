@@ -5,13 +5,13 @@ import {
   PredictionProvider,
   usePredictions,
 } from "./context/PredictionContext";
+import { MatchProvider, useMatches } from "./context/MatchContext";
 import Login from "./pages/Login";
 import Matches from "./pages/Matches";
 import Ligaer from "./pages/Ligaer";
 import PlayedMatches from "./pages/PlayedMatches";
 import Rules from "./pages/Rules";
 import JoinPage from "./pages/JoinPage";
-import { matches } from "./data/dummyData";
 import { isMatchHidden } from "./data/matchUtils";
 
 function BallCrest() {
@@ -99,6 +99,7 @@ function IconBook() {
 }
 
 function Coupon({ predictions }) {
+  const { matches } = useMatches();
   const upcoming = matches.filter((m) => !isMatchHidden(m));
   const total = upcoming.length;
   const done = upcoming.filter((m) => predictions[m.id]).length;
@@ -257,9 +258,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <PredictionProvider>
-          <AppRoutes />
-        </PredictionProvider>
+        <MatchProvider>
+          <PredictionProvider>
+            <AppRoutes />
+          </PredictionProvider>
+        </MatchProvider>
       </AuthProvider>
     </BrowserRouter>
   );
