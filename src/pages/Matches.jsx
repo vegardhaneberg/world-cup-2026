@@ -194,7 +194,6 @@ const UpcomingCard = memo(function UpcomingCard({
           <TeamCrest teamName={match.homeTeam} />
           <div>
             <div className="nm">{match.homeTeam}</div>
-            <div className="meta">{match.venue}</div>
           </div>
         </div>
         <span className="vs">VS</span>
@@ -202,7 +201,6 @@ const UpcomingCard = memo(function UpcomingCard({
           <TeamCrest teamName={match.awayTeam} />
           <div>
             <div className="nm">{match.awayTeam}</div>
-            <div className="meta">Avspark {time}</div>
           </div>
         </div>
       </div>
