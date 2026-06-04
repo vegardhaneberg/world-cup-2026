@@ -1,9 +1,7 @@
 name: Sync Match Results
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch: # Allow manual runs from the Actions tab
+  workflow_dispatch: # Triggered every 5 minutes by cron-job.org
 
 jobs:
   sync:
