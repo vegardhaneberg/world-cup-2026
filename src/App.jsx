@@ -100,15 +100,16 @@ function IconBook() {
 
 function Coupon({ predictions }) {
   const { matches } = useMatches();
+  const { boosts } = usePredictions();
   const upcoming = matches.filter((m) => !isMatchHidden(m));
   const total = upcoming.length;
   const done = upcoming.filter((m) => predictions[m.id]).length;
   const possible = upcoming.reduce((s, m) => {
     const pick = predictions[m.id];
     if (!pick) return s;
-    if (pick === "home") return s + m.pointsHome;
-    if (pick === "draw") return s + m.pointsDraw;
-    return s + m.pointsAway;
+    const pts =
+      pick === "home" ? m.pointsHome : pick === "draw" ? m.pointsDraw : m.pointsAway;
+    return s + (boosts[m.id] !== undefined ? pts * 2 : pts);
   }, 0);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 

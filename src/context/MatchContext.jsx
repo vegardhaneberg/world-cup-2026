@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { getMatchPoints } from '../data/scoring'
-import { isMatchHidden } from '../data/matchUtils'
+import { isMatchHidden, getMatchPeriod } from '../data/matchUtils'
 
 const MatchContext = createContext(null)
 
@@ -19,11 +19,16 @@ function transformMatch(row, oddsMap) {
 
   const round = row.matchday ? `Matchday ${row.matchday}` : row.stage
 
+  const { key: period, label: periodLabel } = getMatchPeriod(row)
+
   return {
     id: row.id,
     group,
     round,
     stage: row.stage,
+    matchday: row.matchday ?? null,
+    period,
+    periodLabel,
     localDate,
     homeTeam: row.home_team,
     awayTeam: row.away_team,

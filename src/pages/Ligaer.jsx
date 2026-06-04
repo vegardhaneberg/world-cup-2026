@@ -60,7 +60,7 @@ export default function Ligaer() {
 
     const [profilesRes, predsRes] = await Promise.all([
       supabase.from('profiles').select('user_id, full_name, email').in('user_id', memberIds),
-      supabase.from('predictions').select('user_id, match_id, outcome').in('user_id', memberIds),
+      supabase.from('predictions').select('user_id, match_id, outcome, boosted').in('user_id', memberIds),
     ])
 
     if (profilesRes.error || predsRes.error) { setLoadingLeague(false); return }
@@ -80,7 +80,7 @@ export default function Ligaer() {
     setLoadingOverall(true)
     const [profilesRes, predsRes] = await Promise.all([
       supabase.from('profiles').select('user_id, full_name, email'),
-      supabase.from('predictions').select('user_id, match_id, outcome'),
+      supabase.from('predictions').select('user_id, match_id, outcome, boosted'),
     ])
 
     if (profilesRes.error || predsRes.error) { setLoadingOverall(false); return }

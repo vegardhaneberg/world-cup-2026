@@ -28,7 +28,7 @@ function groupByLocalDate(matchList) {
   return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
 }
 
-function PlayedCard({ match, prediction }) {
+function PlayedCard({ match, prediction, boosted }) {
   const hasResult = match.result !== null
 
   if (!hasResult) {
@@ -63,18 +63,20 @@ function PlayedCard({ match, prediction }) {
   }
 
   const correct = prediction && prediction === match.result
-  const pointsEarned = correct
+  const basePoints = correct
     ? prediction === 'home'
       ? match.pointsHome
       : prediction === 'draw'
         ? match.pointsDraw
         : match.pointsAway
     : 0
+  const pointsEarned = boosted ? basePoints * 2 : basePoints
 
   return (
-    <div className="match match--done">
+    <div className={`match match--done${boosted ? ' match--boosted' : ''}`}>
       <div className="match-top">
         <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
+        {boosted && <span className="boost-badge">⚡2x</span>}
         <span className="ko">
           <b>{formatTime(match.date)}</b> · {match.city}
         </span>
@@ -112,7 +114,7 @@ function PlayedCard({ match, prediction }) {
 }
 
 export default function PlayedMatches() {
-  const { predictions } = usePredictions()
+  const { predictions, boosts } = usePredictions()
   const { matches, loading } = useMatches()
 
   const played = matches.filter(m => isMatchHidden(m))
@@ -151,6 +153,7 @@ export default function PlayedMatches() {
               key={m.id}
               match={m}
               prediction={predictions[m.id]}
+              boosted={boosts[m.id] !== undefined}
             />
           ))}
         </div>

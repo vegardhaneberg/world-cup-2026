@@ -50,6 +50,7 @@ function Picker({
   pointsAway,
   value,
   onPick,
+  boosted,
 }) {
   const opts = [
     { outcome: "home", label: "H", name: "Hjemme", pts: pointsHome },
@@ -58,18 +59,23 @@ function Picker({
   ];
   return (
     <div className="picker">
-      {opts.map((o) => (
-        <button
-          key={o.outcome}
-          className="pick"
-          aria-pressed={value === o.outcome}
-          onClick={() => onPick(matchId, o.outcome)}
-        >
-          <span className="k">{o.label}</span>
-          <span className="lbl">{o.name}</span>
-          <span className="pt">{o.pts} p</span>
-        </button>
-      ))}
+      {opts.map((o) => {
+        const selected = value === o.outcome;
+        return (
+          <button
+            key={o.outcome}
+            className={`pick${selected && boosted ? " pick--boosted" : ""}`}
+            aria-pressed={selected}
+            onClick={() => onPick(matchId, o.outcome)}
+          >
+            <span className="k">{o.label}</span>
+            <span className="lbl">{o.name}</span>
+            <span className="pt">
+              {selected && boosted ? `${o.pts} → ${o.pts * 2} p` : `${o.pts} p`}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -80,11 +86,16 @@ const UpcomingCard = memo(function UpcomingCard({
   onPick,
   locked,
   isWarning,
+  isBoosted,
+  boostUsedElsewhere,
+  boostLockedElsewhere,
+  onBoost,
 }) {
   const time = formatTime(match.date);
   const outcomeLabel = { home: "H", draw: "U", away: "B" };
 
   const [msLeft, setMsLeft] = useState(0);
+  const [movedCue, setMovedCue] = useState(false);
 
   useEffect(() => {
     if (!isWarning) return;
@@ -107,8 +118,63 @@ const UpcomingCard = memo(function UpcomingCard({
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   })();
 
+  function handleBoost() {
+    const wasMove = boostUsedElsewhere && !isBoosted;
+    onBoost(match);
+    if (wasMove) {
+      setMovedCue(true);
+      setTimeout(() => setMovedCue(false), 1800);
+    }
+  }
+
+  // Doubled-points hint for the active boost button
+  const boostedPts = prediction
+    ? (prediction === "home" ? match.pointsHome
+      : prediction === "draw" ? match.pointsDraw
+      : match.pointsAway)
+    : 0;
+
+  function boostControl() {
+    if (effectiveLocked) return null;
+    if (!prediction) {
+      return (
+        <button className="boost-btn" disabled>
+          <span className="boost-bolt">⚡</span> Velg utfall
+        </button>
+      );
+    }
+    if (isBoosted) {
+      return (
+        <button className="boost-btn boost-btn--active" onClick={handleBoost}>
+          <span className="boost-bolt">⚡</span> Booster aktiv · trykk for å fjerne
+        </button>
+      );
+    }
+    if (boostUsedElsewhere) {
+      if (boostLockedElsewhere) {
+        // The period's 2x sits on a match that has already locked — it is
+        // committed there and can no longer be moved this period.
+        return (
+          <button className="boost-btn" disabled>
+            <span className="boost-bolt">⚡</span> Booster er allerede brukt
+          </button>
+        );
+      }
+      return (
+        <button className="boost-btn boost-btn--move" onClick={handleBoost}>
+          <span className="boost-bolt">⚡</span> Flytt booster hit
+        </button>
+      );
+    }
+    return (
+      <button className="boost-btn boost-btn--available" onClick={handleBoost}>
+        <span className="boost-bolt">⚡</span> Aktiver booster
+      </button>
+    );
+  }
+
   return (
-    <div className="match">
+    <div className={`match${isBoosted ? " match--boosted" : ""}`}>
       {isWarning && msLeft > 0 && (
         <div className="match-warning-banner">Låses om {countdownDisplay}</div>
       )}
@@ -118,6 +184,7 @@ const UpcomingCard = memo(function UpcomingCard({
             ? `Gruppe ${match.group}`
             : (match.stage ?? "").replace(/_/g, " ")}
         </span>
+        {isBoosted && <span className="boost-badge">⚡2x</span>}
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
@@ -141,29 +208,38 @@ const UpcomingCard = memo(function UpcomingCard({
       </div>
       {effectiveLocked ? (
         <div className="match-locked">
-          <span className="match-locked-label">Kampen er i gang</span>
+          <span className="match-locked-label">
+            {isBoosted ? "Kampen er i gang · 2x" : "Kampen er i gang"}
+          </span>
           {prediction && (
-            <span className="match-locked-pick">
+            <span className={`match-locked-pick${isBoosted ? " match-locked-pick--boosted" : ""}`}>
               {outcomeLabel[prediction]}
             </span>
           )}
         </div>
       ) : (
-        <Picker
-          matchId={match.id}
-          pointsHome={match.pointsHome}
-          pointsDraw={match.pointsDraw}
-          pointsAway={match.pointsAway}
-          value={prediction}
-          onPick={onPick}
-        />
+        <>
+          <Picker
+            matchId={match.id}
+            pointsHome={match.pointsHome}
+            pointsDraw={match.pointsDraw}
+            pointsAway={match.pointsAway}
+            value={prediction}
+            onPick={onPick}
+            boosted={isBoosted}
+          />
+          <div className="boost-row">
+            {boostControl()}
+            {movedCue && <span className="boost-moved-cue">⚡ 2x flyttet hit</span>}
+          </div>
+        </>
       )}
     </div>
   );
 });
 
 export default function Matches({ onPick }) {
-  const { predictions } = usePredictions();
+  const { predictions, boosts, boost } = usePredictions();
   const { matches } = useMatches();
   const [tick, setTick] = useState(0);
 
@@ -179,6 +255,22 @@ export default function Matches({ onPick }) {
     if (!m.oddsUpdatedAt) return best;
     return !best || m.oddsUpdatedAt > best ? m.oddsUpdatedAt : best;
   }, null);
+
+  // Which match holds the boost in each period → lets cards offer "move here"
+  const boostByPeriod = {};
+  for (const [matchId, period] of Object.entries(boosts)) {
+    boostByPeriod[period] = Number(matchId);
+  }
+
+  // Periods whose boost sits on an already-locked match: the 2x is committed
+  // there and cannot be moved to another match in the same period.
+  const matchById = {};
+  for (const m of matches) matchById[m.id] = m;
+  const lockedBoostPeriods = new Set();
+  for (const [matchId, period] of Object.entries(boosts)) {
+    const holder = matchById[Number(matchId)];
+    if (holder && isMatchLocked(holder)) lockedBoostPeriods.add(period);
+  }
 
   return (
     <div>
@@ -201,16 +293,24 @@ export default function Matches({ onPick }) {
       {grouped.map(([date, dayMatches]) => (
         <div key={date}>
           <div className="day-head">{formatDateHeading(date)}</div>
-          {dayMatches.map((m) => (
-            <UpcomingCard
-              key={m.id}
-              match={m}
-              prediction={predictions[m.id]}
-              onPick={onPick}
-              locked={isMatchLocked(m)}
-              isWarning={isMatchWarning(m)}
-            />
-          ))}
+          {dayMatches.map((m) => {
+            const isBoosted = boosts[m.id] !== undefined;
+            const periodHolder = boostByPeriod[m.period];
+            return (
+              <UpcomingCard
+                key={m.id}
+                match={m}
+                prediction={predictions[m.id]}
+                onPick={onPick}
+                onBoost={boost}
+                locked={isMatchLocked(m)}
+                isWarning={isMatchWarning(m)}
+                isBoosted={isBoosted}
+                boostUsedElsewhere={periodHolder !== undefined && periodHolder !== m.id}
+                boostLockedElsewhere={lockedBoostPeriods.has(m.period)}
+              />
+            );
+          })}
         </div>
       ))}
 

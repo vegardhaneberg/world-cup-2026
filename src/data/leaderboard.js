@@ -5,7 +5,7 @@ export function computeLeaderboard(profiles, allPredictions, playedMatches) {
   const predByUser = {}
   for (const p of allPredictions) {
     if (!predByUser[p.user_id]) predByUser[p.user_id] = {}
-    predByUser[p.user_id][p.match_id] = p.outcome
+    predByUser[p.user_id][p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
   }
 
   return profiles.map(profile => {
@@ -16,11 +16,13 @@ export function computeLeaderboard(profiles, allPredictions, playedMatches) {
     for (const matchId of playedMatchIds) {
       const m = resultMap[matchId]
       const pred = userPreds[matchId]
-      if (pred && pred === m.result) {
-        correct++
-        if (pred === 'home') score += m.pointsHome
-        else if (pred === 'draw') score += m.pointsDraw
-        else score += m.pointsAway
+      if (pred && pred.outcome === m.result) {
+        correct++ // a boosted correct pick is still one correct pick
+        let pts = pred.outcome === 'home' ? m.pointsHome
+          : pred.outcome === 'draw' ? m.pointsDraw
+          : m.pointsAway
+        if (pred.boosted) pts *= 2 // upside-only: double a correct boosted pick
+        score += pts
       }
     }
 
