@@ -1,3 +1,5 @@
+import { boostedPoints } from './scoring'
+
 export function computeLeaderboard(profiles, allPredictions, playedMatches) {
   const resultMap = Object.fromEntries(playedMatches.map(m => [m.id, m]))
   const playedMatchIds = new Set(playedMatches.map(m => m.id))
@@ -21,7 +23,7 @@ export function computeLeaderboard(profiles, allPredictions, playedMatches) {
         let pts = pred.outcome === 'home' ? m.pointsHome
           : pred.outcome === 'draw' ? m.pointsDraw
           : m.pointsAway
-        if (pred.boosted) pts *= 2 // upside-only: double a correct boosted pick
+        if (pred.boosted) pts = boostedPoints(pts) // upside-only: double a correct boosted pick (capped)
         score += pts
       }
     }

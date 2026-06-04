@@ -1,6 +1,7 @@
 import { isMatchLocked } from '../data/matchUtils'
 import TeamCrest from './TeamCrest'
 import PickBadges from './PickBadges'
+import { boostedPoints } from '../data/scoring'
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('no', {
@@ -41,7 +42,7 @@ function PredictionCard({ match, prediction }) {
         ? match.pointsDraw
         : match.pointsAway
     : 0
-  const pointsEarned = boosted ? basePoints * 2 : basePoints
+  const pointsEarned = boosted ? boostedPoints(basePoints) : basePoints
 
   const pickClass = !hasResult ? 'pending' : correct ? 'correct' : 'wrong'
 

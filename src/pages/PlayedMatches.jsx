@@ -3,6 +3,7 @@ import { usePredictions } from '../context/PredictionContext'
 import { isMatchHidden } from '../data/matchUtils'
 import TeamCrest from '../components/TeamCrest'
 import PickBadges from '../components/PickBadges'
+import { boostedPoints } from '../data/scoring'
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('no', {
@@ -72,7 +73,7 @@ function PlayedCard({ match, prediction, boosted }) {
         ? match.pointsDraw
         : match.pointsAway
     : 0
-  const pointsEarned = boosted ? basePoints * 2 : basePoints
+  const pointsEarned = boosted ? boostedPoints(basePoints) : basePoints
 
   return (
     <div className={`match match--done${boosted ? ' match--boosted' : ''}`}>
