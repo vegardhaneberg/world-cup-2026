@@ -5,15 +5,12 @@ import {
   PredictionProvider,
   usePredictions,
 } from "./context/PredictionContext";
-import { MatchProvider, useMatches } from "./context/MatchContext";
+import { MatchProvider } from "./context/MatchContext";
 import Login from "./pages/Login";
-import Matches from "./pages/Matches";
+import Tipping from "./pages/Tipping";
 import Ligaer from "./pages/Ligaer";
-import PlayedMatches from "./pages/PlayedMatches";
 import Rules from "./pages/Rules";
 import JoinPage from "./pages/JoinPage";
-import { isMatchHidden } from "./data/matchUtils";
-import { boostedPoints } from "./data/scoring";
 
 function BallCrest() {
   return (
@@ -30,6 +27,22 @@ function BallCrest() {
         points="16,9 22,13.4 19.7,20.5 12.3,20.5 10,13.4"
         fill="#20283f"
       />
+    </svg>
+  );
+}
+
+function Football() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="14.3" fill="#fdf3e7" stroke="#20283f" strokeWidth="2.4" />
+      <polygon points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3" fill="#20283f" />
+      <g stroke="#20283f" strokeWidth="2" strokeLinecap="round">
+        <line x1="16" y1="10.5" x2="16" y2="2.5" />
+        <line x1="21.23" y1="14.3" x2="28.84" y2="11.83" />
+        <line x1="19.23" y1="20.45" x2="23.94" y2="26.92" />
+        <line x1="12.77" y1="20.45" x2="8.06" y2="26.92" />
+        <line x1="10.77" y1="14.3" x2="3.16" y2="11.83" />
+      </g>
     </svg>
   );
 }
@@ -66,23 +79,6 @@ function IconTable() {
   );
 }
 
-function IconHistory() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="1 4 1 10 7 10" />
-      <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
-      <polyline points="12 7 12 12 15 15" />
-    </svg>
-  );
-}
-
 function IconBook() {
   return (
     <svg
@@ -99,43 +95,9 @@ function IconBook() {
   );
 }
 
-function Coupon({ predictions }) {
-  const { matches } = useMatches();
-  const { boosts } = usePredictions();
-  const upcoming = matches.filter((m) => !isMatchHidden(m));
-  const total = upcoming.length;
-  const done = upcoming.filter((m) => predictions[m.id]).length;
-  const possible = upcoming.reduce((s, m) => {
-    const pick = predictions[m.id];
-    if (!pick) return s;
-    const pts =
-      pick === "home" ? m.pointsHome : pick === "draw" ? m.pointsDraw : m.pointsAway;
-    return s + (boosts[m.id] !== undefined ? boostedPoints(pts) : pts);
-  }, 0);
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  return (
-    <div className="coupon">
-      <div className="coupon-in">
-        <div className="progress">
-          <div className="row">
-            <span className="a">
-              {done} / {total} tippet
-            </span>
-            <span className="b">Mulig utbytte: {possible} p</span>
-          </div>
-          <div className="bar">
-            <i style={{ width: pct + "%" }} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function MainView() {
   const { user } = useAuth();
-  const { predictions, predict } = usePredictions();
+  const { predict } = usePredictions();
   const [searchParams] = useSearchParams();
   const initialTab = ["ligaer", "regler"].includes(searchParams.get("tab")) ? searchParams.get("tab") : "tip";
   const [tab, setTab] = useState(initialTab);
@@ -153,7 +115,14 @@ function MainView() {
           </span>
           <div className="wordmark">
             <div className="l1">
-              VM <em>2026</em>
+              <span className="tl-vm">VM</span>
+              <span className="tl-bongen">Bongen</span>
+              <span className="cw-usa">2</span>
+              <span className="tl-ball">
+                <Football />
+              </span>
+              <span className="cw-can">2</span>
+              <span className="cw-mex">6</span>
             </div>
           </div>
         </div>
@@ -183,14 +152,6 @@ function MainView() {
         <button
           className="tab"
           role="tab"
-          aria-selected={tab === "spilte"}
-          onClick={() => setTab("spilte")}
-        >
-          <IconHistory /> Spilte kamper
-        </button>
-        <button
-          className="tab"
-          role="tab"
           aria-selected={tab === "regler"}
           onClick={() => setTab("regler")}
         >
@@ -198,12 +159,9 @@ function MainView() {
         </button>
       </div>
 
-      {tab === "tip" && <Matches onPick={predict} />}
+      {tab === "tip" && <Tipping onPick={predict} />}
       {tab === "ligaer" && <Ligaer />}
-      {tab === "spilte" && <PlayedMatches />}
       {tab === "regler" && <Rules />}
-
-      {tab === "tip" && <Coupon predictions={predictions} />}
     </div>
   );
 }

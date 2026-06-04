@@ -272,13 +272,7 @@ export default function Matches({ onPick }) {
 
   return (
     <div>
-      <div className="section-head">
-        <div>
-          <h2>Kommende kamper</h2>
-        </div>
-        <span className="date-flag">{visible.length} kamper</span>
-      </div>
-      <div>
+      <div className="section-head light">
         {latestOddsAt ? (
           <span className="odds-chip">
             Odds oppdatert {formatOddsTime(latestOddsAt)}
@@ -286,6 +280,7 @@ export default function Matches({ onPick }) {
         ) : (
           <span className="odds-chip">Odds ikke satt</span>
         )}
+        <span className="date-flag">{visible.length} kamper</span>
       </div>
 
       {grouped.map(([date, dayMatches]) => (

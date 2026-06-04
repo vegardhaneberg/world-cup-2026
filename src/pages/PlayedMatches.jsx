@@ -127,10 +127,7 @@ export default function PlayedMatches() {
   const grouped = groupByLocalDate(played)
 
   const header = (
-    <div className="section-head">
-      <div>
-        <h2>Spilte kamper</h2>
-      </div>
+    <div className="section-head light">
       <span className="date-flag">{played.length} kamp{played.length !== 1 ? 'er' : ''}</span>
     </div>
   )
