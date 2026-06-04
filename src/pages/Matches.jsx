@@ -1,7 +1,11 @@
 import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
-import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
+import {
+  isMatchLocked,
+  isMatchHidden,
+  isMatchWarning,
+} from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
@@ -70,7 +74,13 @@ function Picker({
   );
 }
 
-const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, locked, isWarning }) {
+const UpcomingCard = memo(function UpcomingCard({
+  match,
+  prediction,
+  onPick,
+  locked,
+  isWarning,
+}) {
   const time = formatTime(match.date);
   const outcomeLabel = { home: "H", draw: "U", away: "B" };
 
@@ -103,7 +113,11 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
         <div className="match-warning-banner">Låses om {countdownDisplay}</div>
       )}
       <div className="match-top">
-        <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
+        <span className="grp">
+          {match.group
+            ? `Gruppe ${match.group}`
+            : (match.stage ?? "").replace(/_/g, " ")}
+        </span>
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
@@ -129,7 +143,9 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
         <div className="match-locked">
           <span className="match-locked-label">Kampen er i gang</span>
           {prediction && (
-            <span className="match-locked-pick">{outcomeLabel[prediction]}</span>
+            <span className="match-locked-pick">
+              {outcomeLabel[prediction]}
+            </span>
           )}
         </div>
       ) : (
@@ -145,7 +161,6 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
     </div>
   );
 });
-
 
 export default function Matches({ onPick }) {
   const { predictions } = usePredictions();
@@ -174,10 +189,13 @@ export default function Matches({ onPick }) {
         <span className="date-flag">{visible.length} kamper</span>
       </div>
       <div>
-        {latestOddsAt
-          ? <span className="odds-chip">Odds oppdatert {formatOddsTime(latestOddsAt)}</span>
-          : <span className="odds-chip">Odds ikke satt</span>
-        }
+        {latestOddsAt ? (
+          <span className="odds-chip">
+            Odds oppdatert {formatOddsTime(latestOddsAt)}
+          </span>
+        ) : (
+          <span className="odds-chip">Odds ikke satt</span>
+        )}
       </div>
 
       {grouped.map(([date, dayMatches]) => (
