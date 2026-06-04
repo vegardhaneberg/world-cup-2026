@@ -183,8 +183,8 @@ const UpcomingCard = memo(function UpcomingCard({
           {match.group
             ? `Gruppe ${match.group}`
             : (match.stage ?? "").replace(/_/g, " ")}
-          {isBoosted && <span className="boost-badge">⚡2x</span>}
         </span>
+        {isBoosted && <span className="boost-badge">⚡2x</span>}
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
