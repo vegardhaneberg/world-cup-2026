@@ -4,6 +4,7 @@ import { useMatches } from '../context/MatchContext'
 import { supabase } from '../lib/supabase'
 import CreateLeagueModal from '../components/CreateLeagueModal'
 import LeagueSettingsModal from '../components/LeagueSettingsModal'
+import UserPredictionsModal from '../components/UserPredictionsModal'
 import { computeLeaderboard } from '../data/leaderboard'
 
 function GearIcon() {
@@ -27,6 +28,7 @@ export default function Ligaer() {
   const [fetchError, setFetchError] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
   const intervalRef = useRef(null)
 
   async function fetchLeagues() {
@@ -53,7 +55,7 @@ export default function Ligaer() {
 
     const memberIds = members.map(m => m.user_id)
     if (memberIds.length === 0) {
-      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [] } }))
+      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [], predictions: [] } }))
       setLoadingLeague(false)
       return
     }
@@ -71,6 +73,7 @@ export default function Ligaer() {
       [leagueId]: {
         rows: computeLeaderboard(profilesRes.data, predsRes.data, playedMatches),
         profiles: profilesRes.data,
+        predictions: predsRes.data,
       }
     }))
     setLoadingLeague(false)
@@ -92,6 +95,7 @@ export default function Ligaer() {
     setOverallData({
       rows: computeLeaderboard(filteredProfiles, predsRes.data, playedMatches),
       playedCount: playedMatches.length,
+      predictions: predsRes.data,
     })
     setLoadingOverall(false)
   }
@@ -139,6 +143,23 @@ export default function Ligaer() {
         }
       }
     })
+  }
+
+  function openUser(row, allPredictions) {
+    const byMatch = {}
+    for (const p of allPredictions ?? []) {
+      if (p.user_id === row.userId) {
+        byMatch[p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
+      }
+    }
+    setSelectedUser({ row, byMatch })
+  }
+
+  function rowKeyDown(e, row, allPredictions) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openUser(row, allPredictions)
+    }
   }
 
   const header = (
@@ -216,7 +237,14 @@ export default function Ligaer() {
                   {overallData.rows.slice(0, 20).map((row, i) => {
                     const isMe = row.userId === user?.id
                     return (
-                      <div key={row.userId} className={`lb-row${isMe ? ' me' : ''}`}>
+                      <div
+                        key={row.userId}
+                        className={`lb-row${isMe ? ' me' : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openUser(row, overallData.predictions)}
+                        onKeyDown={e => rowKeyDown(e, row, overallData.predictions)}
+                      >
                         <span className="rk">{i + 1}</span>
                         <div className="who">
                           <div className="nm">
@@ -237,7 +265,13 @@ export default function Ligaer() {
                     return (
                       <>
                         <div className="lb-ellipsis">…</div>
-                        <div className="lb-row me">
+                        <div
+                          className="lb-row me"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openUser(myRow, overallData.predictions)}
+                          onKeyDown={e => rowKeyDown(e, myRow, overallData.predictions)}
+                        >
                           <span className="rk">{myIndex + 1}</span>
                           <div className="who">
                             <div className="nm">
@@ -284,7 +318,14 @@ export default function Ligaer() {
                   {current.rows.map((row, i) => {
                     const isMe = row.userId === user?.id
                     return (
-                      <div key={row.userId} className={`lb-row${isMe ? ' me' : ''}`}>
+                      <div
+                        key={row.userId}
+                        className={`lb-row${isMe ? ' me' : ''}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openUser(row, current.predictions)}
+                        onKeyDown={e => rowKeyDown(e, row, current.predictions)}
+                      >
                         <span className="rk">{i + 1}</span>
                         <div className="who">
                           <div className="nm">
@@ -319,6 +360,15 @@ export default function Ligaer() {
           onClose={() => setShowSettings(false)}
           onLeagueUpdated={handleLeagueUpdated}
           onMemberRemoved={userId => handleMemberRemoved(selectedLeague.id, userId)}
+        />
+      )}
+
+      {selectedUser && (
+        <UserPredictionsModal
+          user={selectedUser.row}
+          byMatch={selectedUser.byMatch}
+          matches={matches}
+          onClose={() => setSelectedUser(null)}
         />
       )}
     </div>
