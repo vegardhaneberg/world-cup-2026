@@ -1,4 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { join, dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const { FOOTBALL_DATA_API_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
@@ -19,6 +24,18 @@ const API_TO_LOCAL_NAME = {
 
 function normalizeName(name) {
   return API_TO_LOCAL_NAME[name] ?? name;
+}
+
+function buildVenueMap() {
+  const raw = readFileSync(join(__dirname, '../src/data/matches.json'), 'utf-8');
+  const { matches } = JSON.parse(raw);
+  const map = new Map();
+  for (const m of matches) {
+    if (m.team1 && m.team2 && m.ground) {
+      map.set(`${m.team1}|${m.team2}`, m.ground);
+    }
+  }
+  return map;
 }
 
 async function fetchAllMatches() {
@@ -45,6 +62,8 @@ async function fetchAllMatches() {
 
 async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const venueMap = buildVenueMap();
+  console.log(`Loaded ${venueMap.size} venue mappings from matches.json`);
 
   console.log(`Fetching all matches for competition "${COMPETITION_CODE}"…`);
   const apiMatches = await fetchAllMatches();
@@ -79,7 +98,7 @@ async function main() {
       matchday: apiMatch.matchday ?? null,
       home_team: homeTeam,
       away_team: awayTeam,
-      venue: null, // not available in free API tier
+      venue: venueMap.get(`${homeTeam}|${awayTeam}`) ?? null,
       last_updated: apiMatch.lastUpdated ?? null,
     };
 
