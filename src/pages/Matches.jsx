@@ -1,11 +1,25 @@
 import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
-import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
+import {
+  isMatchLocked,
+  isMatchHidden,
+  isMatchWarning,
+} from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Oslo",
+  });
+}
+
+function formatOddsTime(ts) {
+  return new Date(ts).toLocaleString("no", {
+    day: "numeric",
+    month: "long",
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Oslo",
@@ -165,9 +179,12 @@ const UpcomingCard = memo(function UpcomingCard({
         <div className="match-warning-banner">Låses om {countdownDisplay}</div>
       )}
       <div className="match-top">
-        <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
-        {isBoosted && <span className="boost-badge">⚡2x</span>}
-        {match.isEven && <span className="hardflag">Jevn kamp</span>}
+        <span className="grp">
+          {match.group
+            ? `Gruppe ${match.group}`
+            : (match.stage ?? "").replace(/_/g, " ")}
+          {isBoosted && <span className="boost-badge">⚡2x</span>}
+        </span>
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
@@ -221,7 +238,6 @@ const UpcomingCard = memo(function UpcomingCard({
   );
 });
 
-
 export default function Matches({ onPick }) {
   const { predictions, boosts, boost } = usePredictions();
   const { matches } = useMatches();
@@ -234,6 +250,11 @@ export default function Matches({ onPick }) {
 
   const visible = matches.filter((m) => !isMatchHidden(m));
   const grouped = groupByLocalDate(visible);
+
+  const latestOddsAt = visible.reduce((best, m) => {
+    if (!m.oddsUpdatedAt) return best;
+    return !best || m.oddsUpdatedAt > best ? m.oddsUpdatedAt : best;
+  }, null);
 
   // Which match holds the boost in each period → lets cards offer "move here"
   const boostByPeriod = {};
@@ -258,6 +279,15 @@ export default function Matches({ onPick }) {
           <h2>Kommende kamper</h2>
         </div>
         <span className="date-flag">{visible.length} kamper</span>
+      </div>
+      <div>
+        {latestOddsAt ? (
+          <span className="odds-chip">
+            Odds oppdatert {formatOddsTime(latestOddsAt)}
+          </span>
+        ) : (
+          <span className="odds-chip">Odds ikke satt</span>
+        )}
       </div>
 
       {grouped.map(([date, dayMatches]) => (

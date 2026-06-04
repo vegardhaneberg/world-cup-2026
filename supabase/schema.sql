@@ -207,3 +207,30 @@ alter table public.predictions
 -- 5. DROP legacy match_results table
 -- ---------------------------------------------------------------
 drop table if exists public.match_results;
+
+
+CREATE TABLE IF NOT EXISTS public.odds (
+    id          SERIAL PRIMARY KEY,
+    match_id    INTEGER NOT NULL UNIQUE REFERENCES public.matches(id),
+    home_team   TEXT NOT NULL,
+    away_team   TEXT NOT NULL,
+    odds_home   NUMERIC(5,2) NOT NULL,
+    odds_draw   NUMERIC(5,2) NOT NULL,
+    odds_away   NUMERIC(5,2) NOT NULL,
+    fetched_at  TIMESTAMPTZ DEFAULT now()
+  );
+
+  ALTER TABLE public.odds ENABLE ROW LEVEL SECURITY;
+  
+  DROP POLICY IF EXISTS "Anyone can read odds" ON public.odds;
+  CREATE POLICY "Anyone can read odds" ON public.odds FOR SELECT USING (true);
+
+  DO $$
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND tablename = 'odds'
+    ) THEN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.odds;
+    END IF;
+  END $$;

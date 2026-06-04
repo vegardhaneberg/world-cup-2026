@@ -5,10 +5,9 @@ import { isMatchHidden, getMatchPeriod } from '../data/matchUtils'
 
 const MatchContext = createContext(null)
 
-function transformMatch(row) {
-  const pts = getMatchPoints(row.home_team, row.away_team)
-  const isEven = pts.oddsH != null && pts.oddsB != null
-    && Math.min(pts.oddsH, pts.oddsB) >= 2.4
+function transformMatch(row, oddsMap) {
+  const oddsRow = oddsMap ? oddsMap.get(row.id) : null
+  const pts = getMatchPoints(row.home_team, row.away_team, oddsRow)
 
   // Local date in Oslo timezone (YYYY-MM-DD)
   const localDate = new Date(row.utc_date).toLocaleDateString('sv', { timeZone: 'Europe/Oslo' })
@@ -43,7 +42,7 @@ function transformMatch(row) {
     pointsHome: pts.home,
     pointsDraw: pts.draw,
     pointsAway: pts.away,
-    isEven,
+    oddsUpdatedAt: oddsRow?.fetched_at ?? null,
   }
 }
 
@@ -52,24 +51,26 @@ export function MatchProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const channelRef = useRef(null)
 
-  async function fetchMatches() {
-    const { data, error } = await supabase
-      .from('matches')
-      .select('*')
-      .order('utc_date', { ascending: true })
+  async function fetchData() {
+    const [matchesResult, oddsResult] = await Promise.all([
+      supabase.from('matches').select('*').order('utc_date', { ascending: true }),
+      supabase.from('odds').select('*'),
+    ])
 
-    if (!error && data) {
-      setMatches(data.map(transformMatch))
+    if (!matchesResult.error && matchesResult.data) {
+      const oddsMap = new Map((oddsResult.data ?? []).map(o => [o.match_id, o]))
+      setMatches(matchesResult.data.map(row => transformMatch(row, oddsMap)))
     }
     setLoading(false)
   }
 
   useEffect(() => {
-    fetchMatches()
+    fetchData()
 
     channelRef.current = supabase
-      .channel('matches_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchMatches)
+      .channel('matches_odds_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'odds' }, fetchData)
       .subscribe()
 
     return () => {
