@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 76">
+  <g transform="translate(40,0) rotate(90)">
+    <rect width="76" height="40" fill="#ffffff"/>
+    <g fill="#b22234">
+      <rect y="0" width="76" height="3.077"/>
+      <rect y="6.154" width="76" height="3.077"/>
+      <rect y="12.308" width="76" height="3.077"/>
+      <rect y="18.462" width="76" height="3.077"/>
+      <rect y="24.615" width="76" height="3.077"/>
+      <rect y="30.769" width="76" height="3.077"/>
+      <rect y="36.923" width="76" height="3.077"/>
+    </g>
+    <rect width="30.4" height="21.538" fill="#3c3b6e"/>
+    <g fill="#ffffff">
+      <circle cx="3.8" cy="2.7" r="0.8"/><circle cx="11.4" cy="2.7" r="0.8"/><circle cx="19" cy="2.7" r="0.8"/><circle cx="26.6" cy="2.7" r="0.8"/>
+      <circle cx="7.6" cy="5.4" r="0.8"/><circle cx="15.2" cy="5.4" r="0.8"/><circle cx="22.8" cy="5.4" r="0.8"/>
+      <circle cx="3.8" cy="8.1" r="0.8"/><circle cx="11.4" cy="8.1" r="0.8"/><circle cx="19" cy="8.1" r="0.8"/><circle cx="26.6" cy="8.1" r="0.8"/>
+      <circle cx="7.6" cy="10.8" r="0.8"/><circle cx="15.2" cy="10.8" r="0.8"/><circle cx="22.8" cy="10.8" r="0.8"/>
+      <circle cx="3.8" cy="13.5" r="0.8"/><circle cx="11.4" cy="13.5" r="0.8"/><circle cx="19" cy="13.5" r="0.8"/><circle cx="26.6" cy="13.5" r="0.8"/>
+      <circle cx="7.6" cy="16.2" r="0.8"/><circle cx="15.2" cy="16.2" r="0.8"/><circle cx="22.8" cy="16.2" r="0.8"/>
+      <circle cx="3.8" cy="18.9" r="0.8"/><circle cx="11.4" cy="18.9" r="0.8"/><circle cx="19" cy="18.9" r="0.8"/><circle cx="26.6" cy="18.9" r="0.8"/>
+    </g>
+  </g>
+</svg>

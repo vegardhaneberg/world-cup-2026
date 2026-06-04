@@ -165,7 +165,6 @@ export default function Ligaer() {
   const header = (
     <div className="section-head">
       <div>
-        <div className="sub">VM 2026</div>
         <h2>Ligaer</h2>
       </div>
       <button className="btn-create-league" onClick={() => setShowCreate(true)} title="Opprett en liga">

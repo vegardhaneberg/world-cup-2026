@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 96">
+  <g transform="translate(48,0) rotate(90)">
+    <rect width="96" height="48" fill="#ffffff"/>
+    <rect x="0" width="24" height="48" fill="#d52b1e"/>
+    <rect x="72" width="24" height="48" fill="#d52b1e"/>
+    <!-- 11-point maple leaf, centred -->
+    <path fill="#d52b1e" transform="translate(48 24) scale(0.155)" d="
+      M0,-100
+      L10.5,-62 47,-70 36,-33 70,-44 49,-12 88,-8 60,16 79,46 40,40 50,82 18,58 24,100
+      0,80
+      -24,100 -18,58 -50,82 -40,40 -79,46 -60,16 -88,-8 -49,-12 -70,-44 -36,-33 -47,-70 -10.5,-62 Z"/>
+  </g>
+</svg>

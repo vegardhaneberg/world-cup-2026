@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 84">
+  <g transform="translate(48,0) rotate(90)">
+    <rect x="0" width="28" height="48" fill="#006847"/>
+    <rect x="28" width="28" height="48" fill="#ffffff"/>
+    <rect x="56" width="28" height="48" fill="#ce1126"/>
+    <!-- simplified eagle-on-cactus emblem, centred -->
+    <g transform="translate(42 24)">
+      <ellipse cx="0" cy="5.5" rx="6.5" ry="2" fill="#5a7d3a"/>
+      <path fill="#6b4423" d="M-5 4 q5 -10 5 -10 q0 0 5 10 q-2.5 -3 -5 -3 q-2.5 0 -5 3 z"/>
+      <circle cx="0" cy="-2" r="1.6" fill="#6b4423"/>
+      <path fill="#a1c181" d="M-7 3 q-2 -3 -1 -6 q1 2 1 6 z M7 3 q2 -3 1 -6 q-1 2 -1 6 z"/>
+    </g>
+  </g>
+</svg>
