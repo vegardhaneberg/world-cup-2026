@@ -196,11 +196,6 @@ button { font-family: var(--ff-body); cursor: pointer; }
   background: linear-gradient(160deg, var(--boost) 0%, var(--boost-deep) 100%);
   border-color: var(--boost-deep); color: #fff;
 }
-.boost-moved-cue {
-  flex: 0 0 auto; font-size: 10px; font-weight: 800; letter-spacing: 0.6px;
-  text-transform: uppercase; color: var(--boost-deep);
-  animation: boost-cue-in 0.25s ease;
-}
 
 /* Gold badge shown in the match header + on played cards */
 .boost-badge {
@@ -251,7 +246,6 @@ button { font-family: var(--ff-body); cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .match--boosted::before { animation: none; }
-  .boost-moved-cue { animation: none; }
 }
 
 /* ---- Fixed coupon ---- */

@@ -230,7 +230,6 @@ const UpcomingCard = memo(function UpcomingCard({
           />
           <div className="boost-row">
             {boostControl()}
-            {movedCue && <span className="boost-moved-cue">⚡ 2x flyttet hit</span>}
           </div>
         </>
       )}
