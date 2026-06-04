@@ -2,6 +2,7 @@ import { useMatches } from '../context/MatchContext'
 import { usePredictions } from '../context/PredictionContext'
 import { isMatchHidden } from '../data/matchUtils'
 import TeamCrest from '../components/TeamCrest'
+import PickBadges from '../components/PickBadges'
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString('no', {
@@ -56,6 +57,7 @@ function PlayedCard({ match, prediction, boosted }) {
           </div>
         </div>
         <div className="result-row">
+          {prediction && <PickBadges prediction={prediction} state="pending" />}
           <span className="result-badge pending">Venter på resultat…</span>
         </div>
       </div>
@@ -102,11 +104,14 @@ function PlayedCard({ match, prediction, boosted }) {
         {!prediction && (
           <span className="result-badge pending">Ikke tippet</span>
         )}
+        {prediction && (
+          <PickBadges prediction={prediction} state={correct ? 'correct' : 'wrong'} />
+        )}
         {prediction && correct && (
           <span className="result-badge correct">+{pointsEarned} p</span>
         )}
         {prediction && !correct && (
-          <span className="result-badge wrong">Feil tips</span>
+          <span className="result-badge wrong">Ingen poeng</span>
         )}
       </div>
     </div>

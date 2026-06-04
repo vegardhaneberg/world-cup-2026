@@ -139,7 +139,7 @@ const UpcomingCard = memo(function UpcomingCard({
     if (!prediction) {
       return (
         <button className="boost-btn" disabled>
-          <span className="boost-bolt">⚡</span> Velg utfall
+          <span className="boost-bolt">⚡</span> Gjett utfall
         </button>
       );
     }
