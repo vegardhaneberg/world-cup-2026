@@ -25,6 +25,18 @@ export default function Rules() {
         </section>
 
         <section className="rules-section">
+          <h3><span className="rules-bolt">⚡</span> Booster (2x)</h3>
+          <ul>
+            <li>Du kan doble poengene på ett tipp per periode med en 2x-booster.</li>
+            <li>Periodene er gruppespillets runde 1, 2 og 3 — og deretter hver sluttspillrunde for seg (åttedelsfinaler, kvartfinaler, semifinaler, bronsefinale og finale).</li>
+            <li>Tipp først, og trykk så på ⚡-knappen på kampen du vil booste.</li>
+            <li>Treffer du, blir poengene doblet. Bommer du, skjer ingenting ekstra — boosteren er bare en fordel.</li>
+            <li>Du kan flytte boosteren fritt mellom kamper i samme periode helt til den boostede kampen låses.</li>
+            <li>Ubrukte boostere overføres ikke til neste periode.</li>
+          </ul>
+        </section>
+
+        <section className="rules-section">
           <h3>Låsing av kamper</h3>
           <ul>
             <li>Tipping stenges 5 minutter før kampstart.</li>
