@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
-import { isMatchLocked, isMatchHidden, isMatchWarning, isOddsLocked } from "../data/matchUtils";
+import { isMatchLocked, isMatchHidden, isMatchWarning } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 
 function formatTime(dateStr) {
@@ -104,12 +104,6 @@ const UpcomingCard = memo(function UpcomingCard({ match, prediction, onPick, loc
       )}
       <div className="match-top">
         <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
-        {!match.oddsUpdatedAt
-          ? <span className="odds-chip">Odds ikke satt</span>
-          : isOddsLocked(match)
-            ? <span className="odds-chip odds-chip--locked">Odd låst {formatOddsTime(match.oddsUpdatedAt)}</span>
-            : <span className="odds-chip">Odds oppdatert {formatOddsTime(match.oddsUpdatedAt)}</span>
-        }
         <span className="ko">
           <b>{time}</b> · {match.city}
         </span>
@@ -166,6 +160,11 @@ export default function Matches({ onPick }) {
   const visible = matches.filter((m) => !isMatchHidden(m));
   const grouped = groupByLocalDate(visible);
 
+  const latestOddsAt = visible.reduce((best, m) => {
+    if (!m.oddsUpdatedAt) return best;
+    return !best || m.oddsUpdatedAt > best ? m.oddsUpdatedAt : best;
+  }, null);
+
   return (
     <div>
       <div className="section-head">
@@ -173,6 +172,12 @@ export default function Matches({ onPick }) {
           <h2>Kommende kamper</h2>
         </div>
         <span className="date-flag">{visible.length} kamper</span>
+      </div>
+      <div>
+        {latestOddsAt
+          ? <span className="odds-chip">Odds oppdatert {formatOddsTime(latestOddsAt)}</span>
+          : <span className="odds-chip">Odds ikke satt</span>
+        }
       </div>
 
       {grouped.map(([date, dayMatches]) => (

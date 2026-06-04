@@ -12,6 +12,3 @@ export function isMatchWarning(match) {
   return Date.now() >= warnTime && !isMatchLocked(match)
 }
 
-export function isOddsLocked(match) {
-  return Date.now() >= new Date(match.date).getTime() - 30 * 60 * 1000
-}
