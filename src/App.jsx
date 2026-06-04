@@ -13,6 +13,7 @@ import PlayedMatches from "./pages/PlayedMatches";
 import Rules from "./pages/Rules";
 import JoinPage from "./pages/JoinPage";
 import { isMatchHidden } from "./data/matchUtils";
+import { boostedPoints } from "./data/scoring";
 
 function BallCrest() {
   return (
@@ -109,7 +110,7 @@ function Coupon({ predictions }) {
     if (!pick) return s;
     const pts =
       pick === "home" ? m.pointsHome : pick === "draw" ? m.pointsDraw : m.pointsAway;
-    return s + (boosts[m.id] !== undefined ? pts * 2 : pts);
+    return s + (boosts[m.id] !== undefined ? boostedPoints(pts) : pts);
   }, 0);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 

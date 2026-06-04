@@ -18,8 +18,9 @@ export default function Rules() {
         <section className="rules-section">
           <h3>Poeng</h3>
           <ul>
-            <li>Du får poeng for hvert riktig tipp.</li>
-            <li>Poengverdiene er basert på odds: jo mer overraskende utfallet, jo høyere poengsum.</li>
+            <li>Du får poeng for hvert riktig tippet utfall.</li>
+            <li>Poengverdiene er basert på odds: Overraskende utfall gir høyere poengsum.</li>
+            <li>Riktig tippet utfall gir intill 20 poeng — men summen kan øke opp til 30 poeng ved bruk av booster.</li>
             <li>Du kan se poengverdiene direkte på hver kamp.</li>
           </ul>
         </section>
@@ -27,21 +28,22 @@ export default function Rules() {
         <section className="rules-section">
           <h3><span className="rules-bolt">⚡</span> Booster (2x)</h3>
           <ul>
-            <li>Du kan doble poengene på ett tipp per periode med en 2x-booster.</li>
-            <li>Periodene er gruppespillets runde 1, 2 og 3 — og deretter hver sluttspillrunde for seg (åttedelsfinaler, kvartfinaler, semifinaler, bronsefinale og finale).</li>
+            <li>Du kan potensielt øke poengene på én kamp per runde ved bruk av en 2x-booster.</li>
+            <li>En runde defineres som gruppespillets innledende runder (1, 2 og 3) — og deretter hver sluttspillrunde for seg (åttedelsfinaler, kvartfinaler, semifinaler, bronsefinale og finale).</li>
             <li>Tipp først, og trykk så på ⚡-knappen på kampen du vil booste.</li>
-            <li>Treffer du, blir poengene doblet. Bommer du, skjer ingenting ekstra — boosteren er bare en fordel.</li>
-            <li>Du kan flytte boosteren fritt mellom kamper i samme periode helt til den boostede kampen låses.</li>
-            <li>Ubrukte boostere overføres ikke til neste periode.</li>
+            <li>Treffer du, dobles poengene — men du kan få maks 30 poeng per kamp. Boosteren gir altså full uttelling opp til 15 poeng (15 → 30), men har en maks-verdi på 30.</li>
+            <li>Bommer du, skjer det ingenting — boosteren er utelukkende positiv.</li>
+            <li>Du kan flytte boosteren fritt mellom kamper i samme runde helt til den valgte kampen låses.</li>
+            <li>Ubrukte boostere overføres ikke til neste runde.</li>
           </ul>
         </section>
 
         <section className="rules-section">
           <h3>Låsing av kamper</h3>
           <ul>
-            <li>Tipping stenges 5 minutter før kampstart.</li>
-            <li>Låste kamper viser «Kampen er i gang» med ditt valg (om du har tippet).</li>
-            <li>Etter kampen er ferdig forsvinner den fra tippevisningen.</li>
+            <li>Muligheten for å tippe på en kamp stenges 5 minutter før kampstart.</li>
+            <li>Låste kamper viser «Kampen er i gang» med ditt valg (dersom du har tippet).</li>
+            <li>Etter kampenslutt forsvinner den fra tippevisningen, og resultatet finnes i "Spilte Kamper".</li>
           </ul>
         </section>
 

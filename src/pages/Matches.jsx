@@ -7,6 +7,7 @@ import {
   isMatchWarning,
 } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
+import { boostedPoints } from "../data/scoring";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
@@ -71,7 +72,7 @@ function Picker({
             <span className="k">{o.label}</span>
             <span className="lbl">{o.name}</span>
             <span className="pt">
-              {selected && boosted ? `${o.pts} → ${o.pts * 2} p` : `${o.pts} p`}
+              {selected && boosted ? `${o.pts} → ${boostedPoints(o.pts)} p` : `${o.pts} p`}
             </span>
           </button>
         );
