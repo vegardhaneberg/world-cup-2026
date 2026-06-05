@@ -1,4 +1,4 @@
-name: Sync Match Schedule
+name: Sync Matches
 
 on:
   workflow_dispatch: # Triggered externally via GitHub API
