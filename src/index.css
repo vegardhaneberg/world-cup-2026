@@ -525,6 +525,16 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .special-card.won { background: #d4edda; border-color: #1a5c2e; color: #1a5c2e; }
 .special-card.won .special-odds { color: #1a5c2e; }
 .special-card.lost { opacity: 0.6; }
+.special-group-crests {
+  display: flex; flex-direction: row; align-items: center; gap: 4px; flex: 0 0 auto;
+}
+.special-card .special-group-crests .team-crest,
+.special-card .special-group-crests .disc { width: 22px; height: 22px; }
+.special-group-crests-centered {
+  display: flex; flex: 1; justify-content: center; align-items: center; gap: 8px;
+}
+.special-group-crests-centered .team-crest,
+.special-group-crests-centered .disc { width: 28px; height: 28px; }
 
 /* ---- Toast ---- */
 .toast {

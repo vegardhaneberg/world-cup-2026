@@ -3,7 +3,7 @@ import { getTeamInfo } from '../data/dummyData'
 import { TEAM_CRESTS } from '../data/teamCrests'
 import { getFotmobUrl } from '../data/fotmobIds'
 
-export default function TeamCrest({ teamName }) {
+export default function TeamCrest({ teamName, noLink = false }) {
   const [failed, setFailed] = useState(false)
   const src = TEAM_CRESTS[teamName]
   const fotmobUrl = getFotmobUrl(teamName)
@@ -27,7 +27,7 @@ export default function TeamCrest({ teamName }) {
     )
   }
 
-  if (!fotmobUrl) return crest
+  if (!fotmobUrl || noLink) return crest
 
   return (
     <a

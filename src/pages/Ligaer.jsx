@@ -55,7 +55,7 @@ export default function Ligaer() {
 
     const [predsRes, marketsRes, outcomesRes] = await Promise.all([
       predQuery,
-      supabase.from('special_markets').select('id, result_outcome_id').not('result_outcome_id', 'is', null),
+      supabase.from('special_markets').select('id, result_outcome_ids').not('result_outcome_ids', 'eq', '{}'),
       supabase.from('special_outcomes').select('id, market_id, odds, frozen_odds'),
     ])
 

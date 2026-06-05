@@ -20,7 +20,7 @@ create table if not exists public.special_markets (
   title             text not null,                 -- e.g. 'Verdensmester'
   status            text not null default 'open',  -- 'open' | 'settled'
   locks_at          timestamptz,                   -- picks lock at first WC kickoff
-  result_outcome_id uuid,                           -- winning outcome (set on settle)
+  result_outcome_ids uuid[] not null default '{}',  -- winning outcome(s) (set on settle; array supports ties)
   created_at        timestamptz default now() not null
 );
 
@@ -52,17 +52,7 @@ create policy "Anyone can read special outcomes"
   using (true);
 
 
--- 3. FK: special_markets.result_outcome_id → special_outcomes.id
--- Added after both tables exist to break the circular reference.
--- ---------------------------------------------------------------
-alter table public.special_markets
-  drop constraint if exists special_markets_result_outcome_id_fkey;
-alter table public.special_markets
-  add constraint special_markets_result_outcome_id_fkey
-  foreign key (result_outcome_id) references public.special_outcomes(id) on delete set null;
-
-
--- 4. SPECIAL_PREDICTIONS — one pick per user per market
+-- 3. SPECIAL_PREDICTIONS — one pick per user per market
 -- ---------------------------------------------------------------
 create table if not exists public.special_predictions (
   id         uuid primary key default gen_random_uuid(),
@@ -98,7 +88,7 @@ create policy "Users can delete their own special predictions"
   using (auth.uid() = user_id);
 
 
--- 5. Realtime publication
+-- 4. Realtime publication
 -- ---------------------------------------------------------------
 do $$
 begin

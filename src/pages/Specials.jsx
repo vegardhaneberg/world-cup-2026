@@ -3,6 +3,7 @@ import { useSpecials } from "../context/SpecialsContext";
 import TeamCrest from "../components/TeamCrest";
 import { getTeamInfo } from "../data/dummyData";
 import { specialOdds, specialPoints, isSpecialLocked } from "../data/specials";
+import matchesData from "../data/matches.json";
 
 function roundedOdds(outcome) {
   const odds = specialOdds(outcome);
@@ -30,8 +31,25 @@ function darken(hex, f) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-// Highlights the chosen country with its flag colours, name + crest and
-// the points it would award if correct.
+// Build { 'Gruppe A': ['Mexico', 'South Africa', ...], ... } from matches.json
+function buildGroupTeams(data) {
+  const groups = {};
+  for (const match of data.matches ?? []) {
+    if (!match.group) continue;
+    const key = match.group.replace("Group ", "Gruppe ");
+    if (!groups[key]) groups[key] = new Set();
+    groups[key].add(match.team1);
+    groups[key].add(match.team2);
+  }
+  return Object.fromEntries(Object.entries(groups).map(([k, v]) => [k, [...v]]));
+}
+
+const GROUP_TEAMS = buildGroupTeams(matchesData);
+
+function isGroupMarket(market) {
+  return market.key === "top_scoring_group";
+}
+
 function ChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
   const { disc, fg } = getTeamInfo(outcome.name);
   const pts = specialPoints(outcome);
@@ -59,6 +77,42 @@ function ChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
       <div
         className="special-hero-pts"
         style={{ background: fg, color: badgeText }}
+        title="Poeng hvis riktig"
+      >
+        <b>{pts}</b>
+        <span>poeng</span>
+      </div>
+    </div>
+  );
+}
+
+function GroupChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
+  const pts = specialPoints(outcome);
+  const teams = GROUP_TEAMS[outcome.name] ?? [];
+
+  return (
+    <div
+      className={`special-hero${dim ? " special-hero--dim" : ""}`}
+      style={{
+        background: "linear-gradient(135deg, #4a4a4a 0%, #333333 100%)",
+        color: "#ffffff",
+        borderLeft: "5px solid #888",
+      }}
+    >
+      <div className="special-hero-info">
+        <span className="special-hero-label" style={{ color: "#ffffff", opacity: 0.72 }}>
+          {statusLabel}
+        </span>
+        <span className="special-hero-name">{outcome.name}</span>
+      </div>
+      <div className="special-group-crests-centered">
+        {teams.map((team) => (
+          <TeamCrest key={team} teamName={team} noLink />
+        ))}
+      </div>
+      <div
+        className="special-hero-pts"
+        style={{ background: "#888", color: "#ffffff" }}
         title="Poeng hvis riktig"
       >
         <b>{pts}</b>
@@ -102,35 +156,71 @@ function OutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
   );
 }
 
-export default function Specials() {
-  const { markets, picks, loading, pickSpecial } = useSpecials();
+function GroupOutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
+  const cls =
+    "special-card" +
+    (selected ? " selected" : "") +
+    (won ? " won" : "") +
+    (lost ? " lost" : "") +
+    (locked ? " locked" : "");
+  const interactive = !locked && !!onPick;
+  const teams = GROUP_TEAMS[outcome.name] ?? [];
+
+  return (
+    <div
+      className={cls}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={interactive ? selected : undefined}
+      onClick={interactive ? onPick : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onPick();
+              }
+            }
+          : undefined
+      }
+    >
+      <span className="special-name">{outcome.name}</span>
+      <div className="special-group-crests">
+        {teams.map((team) => (
+          <TeamCrest key={team} teamName={team} noLink />
+        ))}
+      </div>
+      <span className="special-odds">{roundedOdds(outcome)}</span>
+    </div>
+  );
+}
+
+function MarketSection({ market, picks, pickSpecial }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
 
-  if (loading) return <div className="lb-loading">Laster…</div>;
-
-  const market = markets.find((m) => m.key === "winner");
-  if (!market) {
-    return <p className="lb-empty-note">Ingen spesialer er åpne ennå.</p>;
-  }
-
   const locked = isSpecialLocked(market);
-  const settled = !!market.result_outcome_id;
+  const settled = (market.result_outcome_ids?.length ?? 0) > 0;
   const pickedId = picks[market.id];
   const pickedOutcome = market.outcomes.find((o) => o.id === pickedId) ?? null;
-  const resultOutcome = settled
-    ? market.outcomes.find((o) => o.id === market.result_outcome_id) ?? null
-    : null;
 
-  // After kickoff the card collapses to the locked pick (and the result once settled).
+  const won = settled && market.result_outcome_ids?.includes(pickedOutcome?.id);
+  const lost = settled && !won;
+
+  const resultOutcomes = settled
+    ? market.outcomes.filter((o) => market.result_outcome_ids.includes(o.id))
+    : [];
+
+  const isGroup = isGroupMarket(market);
+  const HeroComp = isGroup ? GroupChosenHero : ChosenHero;
+  const RowComp = isGroup ? GroupOutcomeRow : OutcomeRow;
+
   if (locked) {
-    const won = settled && resultOutcome && resultOutcome.id === pickedOutcome?.id;
-    const lost = settled && resultOutcome && resultOutcome.id !== pickedOutcome?.id;
-    const statusLabel = settled
-      ? won
-        ? "Riktig! 🎉"
-        : "Bommet"
-      : "Låst";
+    const statusLabel = settled ? (won ? "Riktig! 🎉" : "Bommet") : "Låst";
+    const lockedNote = isGroup
+      ? "Avgjøres etter gruppespillet."
+      : "Avgjøres etter finalen.";
+
     return (
       <div className="match special-bet">
         <div className="match-top special-bet-head special-bet-head--static">
@@ -139,7 +229,7 @@ export default function Specials() {
         </div>
 
         {pickedOutcome ? (
-          <ChosenHero outcome={pickedOutcome} statusLabel={statusLabel} dim={lost} />
+          <HeroComp outcome={pickedOutcome} statusLabel={statusLabel} dim={lost} />
         ) : (
           <p className="lb-empty-note">
             Du valgte ingen {market.title.toLowerCase()}.
@@ -147,22 +237,29 @@ export default function Specials() {
         )}
 
         {settled ? (
-          resultOutcome && (
+          resultOutcomes.length > 0 && (
             <p className="lb-empty-note">
-              Vinner: {resultOutcome.name} · {specialPoints(resultOutcome)} p
+              Vinner: {resultOutcomes.map((o) => o.name).join(", ")} ·{" "}
+              {specialPoints(resultOutcomes[0])} p
             </p>
           )
         ) : (
-          <p className="lb-empty-note">Avgjøres etter finalen.</p>
+          <p className="lb-empty-note">{lockedNote}</p>
         )}
       </div>
     );
   }
 
   const q = query.trim().toLowerCase();
-  const filtered = q
-    ? market.outcomes.filter((o) => o.name.toLowerCase().includes(q))
-    : market.outcomes;
+  const filtered =
+    !isGroup && q
+      ? market.outcomes.filter((o) => o.name.toLowerCase().includes(q))
+      : market.outcomes;
+
+  const actionLabel = isGroup ? "Velg gruppe" : "Velg lag";
+  const emptyCallToAction = isGroup
+    ? "Velg en gruppe →"
+    : `Velg din ${market.title.toLowerCase()} →`;
 
   return (
     <div className={`match special-bet${expanded ? " special-bet--open" : ""}`}>
@@ -175,7 +272,7 @@ export default function Specials() {
         <span className="grp">{market.title}</span>
         <span className="ko">
           <span className="special-bet-action">
-            {expanded ? "Lukk" : pickedOutcome ? "Endre" : "Velg lag"}
+            {expanded ? "Lukk" : pickedOutcome ? "Endre" : actionLabel}
           </span>
           <span className="special-bet-chevron" aria-hidden="true">
             {expanded ? "▲" : "▼"}
@@ -184,7 +281,7 @@ export default function Specials() {
       </button>
 
       {pickedOutcome ? (
-        <ChosenHero outcome={pickedOutcome} />
+        <HeroComp outcome={pickedOutcome} />
       ) : (
         !expanded && (
           <button
@@ -192,31 +289,35 @@ export default function Specials() {
             className="special-empty"
             onClick={() => setExpanded(true)}
           >
-            Velg din {market.title.toLowerCase()} →
+            {emptyCallToAction}
           </button>
         )
       )}
 
       {expanded && (
         <div className="special-bet-body">
-          <input
-            className="special-search"
-            type="search"
-            placeholder="Søk etter lag…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+          {!isGroup && (
+            <input
+              className="special-search"
+              type="search"
+              placeholder="Søk etter lag…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          )}
 
           <div className="special-list">
             {filtered.map((o) => (
-              <OutcomeRow
+              <RowComp
                 key={o.id}
                 outcome={o}
                 selected={o.id === pickedId}
+                locked={false}
+                won={false}
+                lost={false}
                 onPick={() => {
                   const isDeselect = o.id === pickedId;
                   pickSpecial(market.id, o.id);
-                  // Collapse back to the highlighted pick once a country is chosen.
                   if (!isDeselect) setExpanded(false);
                 }}
               />
@@ -227,6 +328,29 @@ export default function Specials() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+export default function Specials() {
+  const { markets, picks, loading, pickSpecial } = useSpecials();
+
+  if (loading) return <div className="lb-loading">Laster…</div>;
+
+  if (markets.length === 0) {
+    return <p className="lb-empty-note">Ingen spesialer er åpne ennå.</p>;
+  }
+
+  return (
+    <div>
+      {markets.map((market) => (
+        <MarketSection
+          key={market.id}
+          market={market}
+          picks={picks}
+          pickSpecial={pickSpecial}
+        />
+      ))}
     </div>
   );
 }

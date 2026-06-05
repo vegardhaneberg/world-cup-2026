@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Settle the Verdensmester market: map the FINISHED FINAL match winner to the
-// matching special_outcomes row and set special_markets.result_outcome_id
+// matching special_outcomes row and set special_markets.result_outcome_ids
 // (+ status='settled'). leaderboard.js then folds the reward into each user's
 // score with no further match-data coupling.
 //
@@ -80,7 +80,7 @@ async function main() {
 
   const { error: updateErr } = await supabase
     .from('special_markets')
-    .update({ result_outcome_id: outcome.id, status: 'settled' })
+    .update({ result_outcome_ids: [outcome.id], status: 'settled' })
     .eq('id', market.id);
   if (updateErr) {
     console.error('ERROR settling market:', updateErr.message);

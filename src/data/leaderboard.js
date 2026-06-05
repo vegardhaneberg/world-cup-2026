@@ -5,7 +5,7 @@ import { specialPoints } from './specials'
 // settled special markets (e.g. Verdensmester) only fold into the total score.
 //
 //   specialPredictions: [{ user_id, market_id, outcome_id }]
-//   settledMarkets:     [{ id, result_outcome_id }]  (only markets with a result)
+//   settledMarkets:     [{ id, result_outcome_ids }]  (only markets with a result)
 //   specialOutcomes:    [{ id, odds, frozen_odds }]  (for reward lookup)
 export function computeLeaderboard(
   profiles,
@@ -26,7 +26,7 @@ export function computeLeaderboard(
 
   // Specials: one pick per (user, market); reward when it matches the result.
   const outcomeById = Object.fromEntries(specialOutcomes.map(o => [o.id, o]))
-  const settled = settledMarkets.filter(m => m.result_outcome_id)
+  const settled = settledMarkets.filter(m => m.result_outcome_ids?.length > 0)
   const specialByUser = {}
   for (const sp of specialPredictions) {
     if (!specialByUser[sp.user_id]) specialByUser[sp.user_id] = {}
@@ -54,8 +54,8 @@ export function computeLeaderboard(
     // Settled specials add ceil(frozen_odds ?? odds) — no cap. Stats unchanged.
     const userSpecials = specialByUser[profile.user_id] ?? {}
     for (const m of settled) {
-      if (userSpecials[m.id] === m.result_outcome_id) {
-        score += specialPoints(outcomeById[m.result_outcome_id])
+      if (m.result_outcome_ids?.includes(userSpecials[m.id])) {
+        score += specialPoints(outcomeById[userSpecials[m.id]])
       }
     }
 
