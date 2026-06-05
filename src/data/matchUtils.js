@@ -25,6 +25,18 @@ const KNOCKOUT_LABELS = {
   FINAL: 'Finale',
 }
 
+// Card header label: "Gruppe A · Runde 1" for group-stage matches (matchday
+// 1–3), or the raw knockout stage ("SEMI FINAL") otherwise. Shared by every
+// match card (upcoming, played, other users' predictions).
+export function matchGroupLabel(match) {
+  if (match.group) {
+    return match.matchday
+      ? `Gruppe ${match.group} · Runde ${match.matchday}`
+      : `Gruppe ${match.group}`
+  }
+  return (match.stage ?? '').replace(/_/g, ' ')
+}
+
 // Booster "period": group stage → matchday (3 periods), knockouts → stage.
 // Centralized so a stage rename is a one-line change. Returns { key, label }.
 // Accepts a raw matches row or a transformed match (needs matchday + stage).

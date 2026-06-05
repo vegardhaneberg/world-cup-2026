@@ -5,6 +5,7 @@ import {
   isMatchLocked,
   isMatchHidden,
   isMatchWarning,
+  matchGroupLabel,
 } from "../data/matchUtils";
 import TeamCrest from "../components/TeamCrest";
 import { boostedPoints } from "../data/scoring";
@@ -180,11 +181,7 @@ const UpcomingCard = memo(function UpcomingCard({
         <div className="match-warning-banner">Låses om {countdownDisplay}</div>
       )}
       <div className="match-top">
-        <span className="grp">
-          {match.group
-            ? `Gruppe ${match.group}`
-            : (match.stage ?? "").replace(/_/g, " ")}
-        </span>
+        <span className="grp">{matchGroupLabel(match)}</span>
         {isBoosted && <span className="boost-badge">⚡2x</span>}
         <span className="ko">
           <b>{time}</b> · {match.city}

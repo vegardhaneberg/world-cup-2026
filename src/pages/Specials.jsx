@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useSpecials } from "../context/SpecialsContext";
 import TeamCrest from "../components/TeamCrest";
-import { getTeamInfo } from "../data/dummyData";
+import { getTeamInfo, NATIONALITY_NB_TO_EN } from "../data/dummyData";
 import { specialOdds, specialPoints, isSpecialLocked } from "../data/specials";
 import matchesData from "../data/matches.json";
+import topScorerOdds from "../data/topScorerOdds.json";
 
 function roundedOdds(outcome) {
   const odds = specialOdds(outcome);
-  return odds == null ? "–" : Math.round(odds);
+  return odds == null ? "–" : Math.ceil(odds);
 }
 
 // --- flag-colour helpers (TEAM_INFO stores disc = primary, fg = accent) ---
@@ -46,8 +47,25 @@ function buildGroupTeams(data) {
 
 const GROUP_TEAMS = buildGroupTeams(matchesData);
 
+// Build { 'Kylian Mbappe': 'Frankrike', ... } from topScorerOdds.json — the
+// single source of truth for the player list and their nationalities.
+const PLAYER_NATIONALITY = Object.fromEntries(
+  (topScorerOdds.available_bets ?? []).map((b) => [b.player, b.nationality]),
+);
+
+// English nationality for a player (for getTeamInfo / TeamCrest, which key off
+// English names). Falls back to the raw value so getTeamInfo degrades to grey.
+function playerTeamName(player) {
+  const nb = PLAYER_NATIONALITY[player];
+  return NATIONALITY_NB_TO_EN[nb] ?? nb ?? player;
+}
+
 function isGroupMarket(market) {
   return market.key === "top_scoring_group" || market.key === "most_carded_group";
+}
+
+function isTopScorerMarket(market) {
+  return market.key === "top_scorer";
 }
 
 function ChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
@@ -149,7 +167,7 @@ function OutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
           : undefined
       }
     >
-      <TeamCrest teamName={outcome.name} />
+      <TeamCrest teamName={outcome.name} noLink />
       <span className="special-name">{outcome.name}</span>
       <span className="special-odds">{roundedOdds(outcome)}</span>
     </div>
@@ -195,6 +213,77 @@ function GroupOutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
   );
 }
 
+function PlayerChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
+  const teamName = playerTeamName(outcome.name);
+  const { disc, fg } = getTeamInfo(teamName);
+  const pts = specialPoints(outcome);
+  const text = readableText(disc);
+  const badgeText = readableText(fg);
+
+  return (
+    <div
+      className={`special-hero${dim ? " special-hero--dim" : ""}`}
+      style={{
+        background: `linear-gradient(135deg, ${disc} 0%, ${darken(disc, 0.72)} 100%)`,
+        color: text,
+        borderLeft: `5px solid ${fg}`,
+      }}
+    >
+      <div className="special-hero-crest">
+        <TeamCrest teamName={teamName} noLink />
+      </div>
+      <div className="special-hero-info">
+        <span className="special-hero-label" style={{ color: text, opacity: 0.72 }}>
+          {statusLabel}
+        </span>
+        <span className="special-hero-name">{outcome.name}</span>
+      </div>
+      <div
+        className="special-hero-pts"
+        style={{ background: fg, color: badgeText }}
+        title="Poeng hvis riktig"
+      >
+        <b>{pts}</b>
+        <span>poeng</span>
+      </div>
+    </div>
+  );
+}
+
+function PlayerOutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
+  const cls =
+    "special-card" +
+    (selected ? " selected" : "") +
+    (won ? " won" : "") +
+    (lost ? " lost" : "") +
+    (locked ? " locked" : "");
+  const interactive = !locked && !!onPick;
+
+  return (
+    <div
+      className={cls}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-pressed={interactive ? selected : undefined}
+      onClick={interactive ? onPick : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onPick();
+              }
+            }
+          : undefined
+      }
+    >
+      <TeamCrest teamName={playerTeamName(outcome.name)} noLink />
+      <span className="special-name">{outcome.name}</span>
+      <span className="special-odds">{roundedOdds(outcome)}</span>
+    </div>
+  );
+}
+
 function MarketSection({ market, picks, pickSpecial }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -212,8 +301,17 @@ function MarketSection({ market, picks, pickSpecial }) {
     : [];
 
   const isGroup = isGroupMarket(market);
-  const HeroComp = isGroup ? GroupChosenHero : ChosenHero;
-  const RowComp = isGroup ? GroupOutcomeRow : OutcomeRow;
+  const isTopScorer = isTopScorerMarket(market);
+  const HeroComp = isGroup
+    ? GroupChosenHero
+    : isTopScorer
+    ? PlayerChosenHero
+    : ChosenHero;
+  const RowComp = isGroup
+    ? GroupOutcomeRow
+    : isTopScorer
+    ? PlayerOutcomeRow
+    : OutcomeRow;
 
   if (locked) {
     const statusLabel = settled ? (won ? "Riktig! 🎉" : "Bommet") : "Låst";
@@ -256,10 +354,16 @@ function MarketSection({ market, picks, pickSpecial }) {
       ? market.outcomes.filter((o) => o.name.toLowerCase().includes(q))
       : market.outcomes;
 
-  const actionLabel = isGroup ? "Velg gruppe" : "Velg lag";
+  const actionLabel = isGroup
+    ? "Velg gruppe"
+    : isTopScorer
+    ? "Velg spiller"
+    : "Velg lag";
   const emptyCallToAction = isGroup
     ? "Velg en gruppe →"
     : `Velg din ${market.title.toLowerCase()} →`;
+  const searchPlaceholder = isTopScorer ? "Søk etter spiller…" : "Søk etter lag…";
+  const noMatchesNote = isTopScorer ? "Fant ingen spillere." : "Fant ingen lag.";
 
   return (
     <div className={`match special-bet${expanded ? " special-bet--open" : ""}`}>
@@ -300,7 +404,7 @@ function MarketSection({ market, picks, pickSpecial }) {
             <input
               className="special-search"
               type="search"
-              placeholder="Søk etter lag…"
+              placeholder={searchPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -323,7 +427,7 @@ function MarketSection({ market, picks, pickSpecial }) {
               />
             ))}
             {filtered.length === 0 && (
-              <p className="lb-empty-note">Fant ingen lag.</p>
+              <p className="lb-empty-note">{noMatchesNote}</p>
             )}
           </div>
         </div>

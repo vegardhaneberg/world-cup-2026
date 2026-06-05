@@ -1,6 +1,6 @@
 import { useMatches } from '../context/MatchContext'
 import { usePredictions } from '../context/PredictionContext'
-import { isMatchHidden } from '../data/matchUtils'
+import { isMatchHidden, matchGroupLabel } from '../data/matchUtils'
 import TeamCrest from '../components/TeamCrest'
 import PickBadges from '../components/PickBadges'
 import { boostedPoints } from '../data/scoring'
@@ -37,7 +37,7 @@ function PlayedCard({ match, prediction, boosted }) {
     return (
       <div className="match match--done">
         <div className="match-top">
-          <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
+          <span className="grp">{matchGroupLabel(match)}</span>
           <span className="ko">
             <b>{formatTime(match.date)}</b> · {match.city}
           </span>
@@ -78,7 +78,7 @@ function PlayedCard({ match, prediction, boosted }) {
   return (
     <div className={`match match--done${boosted ? ' match--boosted' : ''}`}>
       <div className="match-top">
-        <span className="grp">{match.group ? `Gruppe ${match.group}` : (match.stage ?? '').replace(/_/g, ' ')}</span>
+        <span className="grp">{matchGroupLabel(match)}</span>
         {boosted && <span className="boost-badge">⚡2x</span>}
         <span className="ko">
           <b>{formatTime(match.date)}</b> · {match.city}
