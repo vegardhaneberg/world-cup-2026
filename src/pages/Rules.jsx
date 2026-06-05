@@ -39,6 +39,18 @@ export default function Rules() {
         </section>
 
         <section className="rules-section">
+          <h3>Spesialer</h3>
+          <ul>
+            <li>Under «Spesialer» tipper du på utfall for hele turneringen.</li>
+            <li><strong>Verdensmester:</strong> velg laget du tror vinner VM. Treffer du, får du poeng lik oddsen rundet opp — odds 6,0 gir 6 poeng, odds 38 gir 38 poeng.</li>
+            <li>Det er ingen øvre grense på spesial-poeng, i motsetning til kamper der maks er 20 poeng (30 med booster).</li>
+            <li>Oddsen låses ved turneringsstart, og du kan endre valget ditt helt fram til den første kampen sparkes i gang.</li>
+            <li>Boostere gjelder ikke for spesialer.</li>
+            <li>Verdensmester avgjøres etter finalen, og poengene legges til totalsummen din.</li>
+          </ul>
+        </section>
+
+        <section className="rules-section">
           <h3>Låsing av kamper</h3>
           <ul>
             <li>Muligheten for å tippe på en kamp stenges 5 minutter før kampstart.</li>
