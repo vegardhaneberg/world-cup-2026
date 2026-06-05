@@ -91,7 +91,7 @@ function PredictionCard({ match, prediction }) {
           <span className="result-badge correct">+{pointsEarned} p</span>
         )}
         {hasResult && pick && !correct && (
-          <span className="result-badge wrong">Ingen poeng</span>
+          <span className="result-badge wrong">0 p</span>
         )}
       </div>
     </div>

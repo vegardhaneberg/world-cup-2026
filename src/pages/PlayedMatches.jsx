@@ -112,7 +112,7 @@ function PlayedCard({ match, prediction, boosted }) {
           <span className="result-badge correct">+{pointsEarned} p</span>
         )}
         {prediction && !correct && (
-          <span className="result-badge wrong">Ingen poeng</span>
+          <span className="result-badge wrong">0 p</span>
         )}
       </div>
     </div>
