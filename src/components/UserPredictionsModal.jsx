@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import { isMatchLocked, matchGroupLabel } from '../data/matchUtils'
+import { useSpecials } from '../context/SpecialsContext'
+import { isSpecialLocked } from '../data/specials'
+import { SpecialResultCard } from '../pages/Specials'
 import TeamCrest from './TeamCrest'
 import PickBadges from './PickBadges'
 import { boostedPoints } from '../data/scoring'
@@ -96,9 +100,13 @@ function PredictionCard({ match, prediction }) {
   )
 }
 
-export default function UserPredictionsModal({ user, byMatch, matches, onClose }) {
+export default function UserPredictionsModal({ user, byMatch, bySpecial = {}, matches, onClose }) {
+  const [sub, setSub] = useState('kamper')
+  const { markets, loading: specialsLoading } = useSpecials()
+
   const locked = matches.filter(isMatchLocked)
   const grouped = groupByLocalDate(locked)
+  const lockedMarkets = markets.filter(isSpecialLocked)
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -113,18 +121,59 @@ export default function UserPredictionsModal({ user, byMatch, matches, onClose }
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
+        <div className="subtabs" role="tablist">
+          <button
+            className="subtab"
+            role="tab"
+            aria-selected={sub === 'kamper'}
+            onClick={() => setSub('kamper')}
+          >
+            Kamper
+          </button>
+          <button
+            className="subtab"
+            role="tab"
+            aria-selected={sub === 'spesialer'}
+            onClick={() => setSub('spesialer')}
+          >
+            Spesialer
+          </button>
+        </div>
+
         <div className="modal-body">
-          {grouped.length === 0 ? (
-            <p className="lb-empty-note">Ingen kamper er låst ennå.</p>
-          ) : (
-            grouped.map(([date, dayMatches]) => (
-              <div key={date}>
-                <div className="day-head">{formatDateHeading(date)}</div>
-                {dayMatches.map(m => (
-                  <PredictionCard key={m.id} match={m} prediction={byMatch[m.id]} />
+          {sub === 'kamper' && (
+            grouped.length === 0 ? (
+              <p className="lb-empty-note">Ingen kamper er låst ennå.</p>
+            ) : (
+              grouped.map(([date, dayMatches]) => (
+                <div key={date}>
+                  <div className="day-head">{formatDateHeading(date)}</div>
+                  {dayMatches.map(m => (
+                    <PredictionCard key={m.id} match={m} prediction={byMatch[m.id]} />
+                  ))}
+                </div>
+              ))
+            )
+          )}
+
+          {sub === 'spesialer' && (
+            specialsLoading ? (
+              <div className="lb-loading">Laster…</div>
+            ) : lockedMarkets.length === 0 ? (
+              <p className="lb-empty-note">Ingen spesialer er låst ennå.</p>
+            ) : (
+              <div className="upred-specials">
+                {lockedMarkets.map(market => (
+                  <SpecialResultCard
+                    key={market.id}
+                    market={market}
+                    pickedId={bySpecial[market.id]}
+                    statusLabel="Valg"
+                    noPickMessage="Ikke tippet"
+                  />
                 ))}
               </div>
-            ))
+            )
           )}
         </div>
       </div>

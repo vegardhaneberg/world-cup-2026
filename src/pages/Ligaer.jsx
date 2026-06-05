@@ -77,7 +77,7 @@ export default function Ligaer() {
 
     const memberIds = members.map(m => m.user_id)
     if (memberIds.length === 0) {
-      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [], predictions: [] } }))
+      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [], predictions: [], specialPredictions: [] } }))
       setLoadingLeague(false)
       return
     }
@@ -100,6 +100,7 @@ export default function Ligaer() {
         ),
         profiles: profilesRes.data,
         predictions: predsRes.data,
+        specialPredictions: specials.specialPredictions,
       }
     }))
     setLoadingLeague(false)
@@ -129,6 +130,7 @@ export default function Ligaer() {
       ),
       playedCount: playedMatches.length,
       predictions: predsRes.data,
+      specialPredictions: specials.specialPredictions,
     })
     setLoadingOverall(false)
   }
@@ -171,6 +173,7 @@ export default function Ligaer() {
       return {
         ...prev,
         [leagueId]: {
+          ...d,
           rows: d.rows.filter(r => r.userId !== userId),
           profiles: d.profiles.filter(p => p.user_id !== userId),
         }
@@ -178,20 +181,26 @@ export default function Ligaer() {
     })
   }
 
-  function openUser(row, allPredictions) {
+  function openUser(row, allPredictions, allSpecialPredictions) {
     const byMatch = {}
     for (const p of allPredictions ?? []) {
       if (p.user_id === row.userId) {
         byMatch[p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
       }
     }
-    setSelectedUser({ row, byMatch })
+    const bySpecial = {}
+    for (const p of allSpecialPredictions ?? []) {
+      if (p.user_id === row.userId) {
+        bySpecial[p.market_id] = p.outcome_id
+      }
+    }
+    setSelectedUser({ row, byMatch, bySpecial })
   }
 
-  function rowKeyDown(e, row, allPredictions) {
+  function rowKeyDown(e, row, allPredictions, allSpecialPredictions) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      openUser(row, allPredictions)
+      openUser(row, allPredictions, allSpecialPredictions)
     }
   }
 
@@ -274,8 +283,8 @@ export default function Ligaer() {
                         className={`lb-row${isMe ? ' me' : ''}`}
                         role="button"
                         tabIndex={0}
-                        onClick={() => openUser(row, overallData.predictions)}
-                        onKeyDown={e => rowKeyDown(e, row, overallData.predictions)}
+                        onClick={() => openUser(row, overallData.predictions, overallData.specialPredictions)}
+                        onKeyDown={e => rowKeyDown(e, row, overallData.predictions, overallData.specialPredictions)}
                       >
                         <span className="rk">{i + 1}</span>
                         <div className="who">
@@ -301,8 +310,8 @@ export default function Ligaer() {
                           className="lb-row me"
                           role="button"
                           tabIndex={0}
-                          onClick={() => openUser(myRow, overallData.predictions)}
-                          onKeyDown={e => rowKeyDown(e, myRow, overallData.predictions)}
+                          onClick={() => openUser(myRow, overallData.predictions, overallData.specialPredictions)}
+                          onKeyDown={e => rowKeyDown(e, myRow, overallData.predictions, overallData.specialPredictions)}
                         >
                           <span className="rk">{myIndex + 1}</span>
                           <div className="who">
@@ -355,8 +364,8 @@ export default function Ligaer() {
                         className={`lb-row${isMe ? ' me' : ''}`}
                         role="button"
                         tabIndex={0}
-                        onClick={() => openUser(row, current.predictions)}
-                        onKeyDown={e => rowKeyDown(e, row, current.predictions)}
+                        onClick={() => openUser(row, current.predictions, current.specialPredictions)}
+                        onKeyDown={e => rowKeyDown(e, row, current.predictions, current.specialPredictions)}
                       >
                         <span className="rk">{i + 1}</span>
                         <div className="who">
@@ -399,6 +408,7 @@ export default function Ligaer() {
         <UserPredictionsModal
           user={selectedUser.row}
           byMatch={selectedUser.byMatch}
+          bySpecial={selectedUser.bySpecial}
           matches={matches}
           onClose={() => setSelectedUser(null)}
         />
