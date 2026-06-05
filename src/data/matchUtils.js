@@ -3,7 +3,7 @@ export function isMatchLocked(match) {
 }
 
 export function isMatchHidden(match) {
-  return Date.now() >= new Date(match.date).getTime() + 60 * 60 * 1000
+  return Date.now() >= new Date(match.date).getTime() + 3 * 60 * 60 * 1000
 }
 
 export function isMatchWarning(match) {
