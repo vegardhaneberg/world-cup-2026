@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
 import Matches from "./Matches";
@@ -42,9 +42,19 @@ function Coupon({ predictions }) {
 
 export default function Tipping({ onPick }) {
   const { predictions } = usePredictions();
-  const { matches } = useMatches();
-  const upcomingCount = matches.filter((m) => !isMatchHidden(m)).length;
-  const [sub, setSub] = useState(upcomingCount > 0 ? "kommende" : "spilte");
+  const { matches, loading } = useMatches();
+  const [sub, setSub] = useState("kommende");
+  const didInit = useRef(false);
+
+  // Default to "Kommende"; once matches finish loading, fall back to "Spilte"
+  // only if there are no upcoming matches left. Runs once so it never overrides
+  // a later manual tab switch.
+  useEffect(() => {
+    if (loading || didInit.current) return;
+    didInit.current = true;
+    const upcomingCount = matches.filter((m) => !isMatchHidden(m)).length;
+    if (upcomingCount === 0) setSub("spilte");
+  }, [loading, matches]);
 
   return (
     <div>
