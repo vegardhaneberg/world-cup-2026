@@ -14,7 +14,7 @@ export function SpecialsProvider({ children }) {
 
   async function fetchMarkets() {
     const [marketsRes, outcomesRes] = await Promise.all([
-      supabase.from('special_markets').select('*'),
+      supabase.from('special_markets').select('*').order('created_at', { ascending: true }),
       supabase.from('special_outcomes').select('*'),
     ])
     if (!marketsRes.error && marketsRes.data) {

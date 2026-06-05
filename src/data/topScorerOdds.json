@@ -1,0 +1,32 @@
+{
+  "special_bet_type": "top_scorer_odds",
+  "available_bets": [
+    { "player": "Kylian Mbappe", "nationality": "Frankrike", "odds": 5.5 },
+    { "player": "Harry Kane", "nationality": "England","odds": 7.0 },
+    { "player": "Lionel Messi", "nationality": "Argentina","odds": 14.0 },
+    { "player": "Erling Braut Haaland", "nationality": "Norge","odds": 14.0 },
+    { "player": "Mikel Oyarzabal", "nationality": "Spania","odds": 14.0 },
+    { "player": "Lamine Yamal", "nationality": "Spania","odds": 18.0 },
+    { "player": "Cristiano Ronaldo", "nationality": "Portugal","odds": 20.0 },
+    { "player": "Ousmane Dembele", "nationality": "Frankrike","odds": 25.0 },
+    { "player": "Vinicius Junior", "nationality": "Brasil","odds": 25.0 },
+    { "player": "Raphinha", "nationality": "Brasil","odds": 28.0 },
+    { "player": "Julian Alvarez", "nationality": "Argentina", "odds": 30.0 },
+    { "player": "Lautaro Martinez", "nationality": "Argentina", "odds": 33.0 },
+    { "player": "Romelu Lukaku", "nationality": "Belgia", "odds": 35.0 },
+    { "player": "Kai Havertz", "nationality": "Tyskland", "odds": 35.0 },
+    { "player": "Cody Gakpo", "nationality": "Nederland", "odds": 40.0 },
+    { "player": "Ferran Torres", "nationality": "Spania", "odds": 40.0 },
+    { "player": "Nick Woltemade", "nationality": "Tyskland", "odds": 40.0 },
+    { "player": "Igor Thiago", "nationality": "Brasil", "odds": 40.0 },
+    { "player": "Michael Olise", "nationality": "Frankrike", "odds": 45.0 },
+    { "player": "Jamal Musiala", "nationality": "Tyskland", "odds": 45.0 },
+    { "player": "Darwin Nunez", "nationality": "Uruguay", "odds": 66.0 },
+    { "player": "Matheus Cunha", "nationality": "Brasil", "odds": 66.0 },
+    { "player": "Donyell Malen", "nationality": "Nederland", "odds": 66.0 },
+    { "player": "Christian Pulisic", "nationality": "USA", "odds": 80.0 },
+    { "player": "Viktor Gyokeres", "nationality": "Sverige", "odds": 80.0 },
+    { "player": "Endrick", "nationality": "Brasil", "odds": 80.0 },
+    { "player": "Alexander Sorloth", "nationality": "Norge", "odds": 100.0 }
+  ]
+}
