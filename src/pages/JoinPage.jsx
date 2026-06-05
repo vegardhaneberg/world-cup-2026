@@ -12,6 +12,22 @@ function BallCrest() {
   )
 }
 
+function Football() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" style={{ width: '100%', height: '100%' }}>
+      <circle cx="16" cy="16" r="14.3" fill="#fdf3e7" stroke="#20283f" strokeWidth="2.4" />
+      <polygon points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3" fill="#20283f" />
+      <g stroke="#20283f" strokeWidth="2" strokeLinecap="round">
+        <line x1="16" y1="10.5" x2="16" y2="2.5" />
+        <line x1="21.23" y1="14.3" x2="28.84" y2="11.83" />
+        <line x1="19.23" y1="20.45" x2="23.94" y2="26.92" />
+        <line x1="12.77" y1="20.45" x2="8.06" y2="26.92" />
+        <line x1="10.77" y1="14.3" x2="3.16" y2="11.83" />
+      </g>
+    </svg>
+  )
+}
+
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -129,11 +145,19 @@ export default function JoinPage() {
 
   if (!user) {
     return (
-      <div className="join-page">
-        <div className="join-card">
-          <div className="join-crest"><BallCrest /></div>
-          <h2 className="join-title">Bli med i <em>{league.name}</em></h2>
-          <p className="join-subtitle">Logg inn for å bli med i ligaen.</p>
+      <div className="login-page">
+        <div className="login-card">
+          <div className="login-crest"><BallCrest /></div>
+          <div className="login-title">
+            <span className="tl-vm">VM</span>
+            <span className="tl-bongen">Bongen</span>
+            <span className="cw-usa">2</span>
+            <span className="tl-ball"><Football /></span>
+            <span className="cw-can">2</span>
+            <span className="cw-mex">6</span>
+          </div>
+          <div className="login-subtitle">Du er invitert til <em>{league.name}</em>! Logg inn for å bli med.</div>
+          <hr className="login-divider" />
           <button
             className="btn-google"
             onClick={() => {
