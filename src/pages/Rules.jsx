@@ -26,6 +26,17 @@ export default function Rules() {
         </section>
 
         <section className="rules-section">
+          <h3>Gruppespill-bonus</h3>
+          <ul>
+            <li>For hver 10. riktige gruppespillstips får du 5 bonuspoeng.</li>
+            <li>Bonusen belønner deg for å treffe på mange kamper — ikke bare å satse på de store overraskelsene.</li>
+            <li>Bare riktige tips i gruppespillet teller (rundene 1, 2 og 3). Sluttspill og spesialer teller ikke.</li>
+            <li>Det er ingen øvre grense — 20 riktige gir 10 bonuspoeng, 30 gir 15, og så videre.</li>
+            <li>Følg med på fremgangen mot neste bonus i tippekupongen.</li>
+          </ul>
+        </section>
+
+        <section className="rules-section">
           <h3><span className="rules-bolt">⚡</span> Booster (2x)</h3>
           <ul>
             <li>Du kan potensielt øke poengene på én kamp per runde ved bruk av en 2x-booster.</li>

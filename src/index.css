@@ -311,6 +311,9 @@ button { font-family: var(--ff-body); cursor: pointer; }
 }
 .coupon-in {
   max-width: 600px; margin: 0 auto; padding: 12px 20px;
+  /* Fixed height so the Coupon (Kommende) and BonusTracker (Spilte) bars are
+     identical — keeps the fixed bar's top edge stationary across tab switches. */
+  min-height: 74px; display: flex; flex-direction: column; justify-content: center;
 }
 .progress { flex: 1; min-width: 0; }
 .progress .row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
@@ -318,6 +321,8 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .progress .row .b { font-size: 11px; font-weight: 700; color: var(--ink-2); }
 .bar { height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .bar > i { display: block; height: 100%; background: var(--accent); }
+.bonus-note { margin-top: 7px; font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.bonus-note strong { color: var(--accent); font-size: 13px; }
 .btn-deliver {
   flex: 0 0 auto; background: var(--accent); color: #fff;
   border: none; border-radius: 6px; padding: 11px 22px;
@@ -441,6 +446,7 @@ button { font-family: var(--ff-body); cursor: pointer; }
 
 /* ---- Spesialer (outright bets) ---- */
 /* World-champion bet rendered as a standalone, expandable match-style card. */
+.special-bet { margin-bottom: 20px; }
 .special-bet .special-bet-head {
   width: 100%; background: none; cursor: pointer; font: inherit;
   border: none; border-bottom: 1px solid var(--line);

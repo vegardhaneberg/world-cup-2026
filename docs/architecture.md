@@ -55,6 +55,8 @@ Exports:
 ### `src/data/scoring.js`
 `getMatchPoints(homeTeam, awayTeam)` averages the h2h odds across all bookmakers in `wc-odds.json` for a given fixture, then maps each outcome's odds to points via `Math.max(1, Math.round(odds))`. Falls back to home=2, draw=3, away=4 if no odds data is found.
 
+**Group-stage bonus** — `groupBonus(n) = floor(n / GROUP_BONUS_STEP) * GROUP_BONUS_POINTS` (+5 per 10 correct group picks, no cap). Derived entirely from existing predictions + results (no DB migration). `computeLeaderboard` counts correct *group-stage* picks (`isGroupStageMatch`, i.e. `matchday != null`) into a separate `groupCorrect` tally and folds `groupBonus(groupCorrect)` into `score` — the displayed `correct`/`played` counts stay pure all-matches counts. The Tipping-page `Coupon` widget renders a realized-only progress tracker (modulo bar toward the next bonus, switching to a frozen summary once no unplayed group matches remain) from the same `scoring.js` helpers, so it can't disagree with the table.
+
 ---
 
 ## Supabase

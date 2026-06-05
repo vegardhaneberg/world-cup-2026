@@ -1,4 +1,4 @@
-import { boostedPoints } from './scoring'
+import { boostedPoints, groupBonus, isGroupStageMatch } from './scoring'
 import { specialPoints } from './specials'
 
 // Builds the ranked table. Match predictions drive the "X av Y rette" stats;
@@ -37,12 +37,14 @@ export function computeLeaderboard(
     const userPreds = predByUser[profile.user_id] ?? {}
     let score = 0
     let correct = 0
+    let groupCorrect = 0 // group-stage-only count driving the bonus; not displayed
 
     for (const matchId of playedMatchIds) {
       const m = resultMap[matchId]
       const pred = userPreds[matchId]
       if (pred && pred.outcome === m.result) {
         correct++ // a boosted correct pick is still one correct pick
+        if (isGroupStageMatch(m)) groupCorrect++ // knockouts/specials don't count toward the bonus
         let pts = pred.outcome === 'home' ? m.pointsHome
           : pred.outcome === 'draw' ? m.pointsDraw
           : m.pointsAway
@@ -50,6 +52,10 @@ export function computeLeaderboard(
         score += pts
       }
     }
+
+    // +5 per 10 correct group picks. Folds into score like boosted/specials;
+    // correct/played stay pure all-matches counts (bonus is points-only).
+    score += groupBonus(groupCorrect)
 
     // Settled specials add ceil(frozen_odds ?? odds) — no cap. Stats unchanged.
     const userSpecials = specialByUser[profile.user_id] ?? {}
