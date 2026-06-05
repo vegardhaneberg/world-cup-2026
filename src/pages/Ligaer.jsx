@@ -44,6 +44,28 @@ export default function Ligaer() {
     setLeagues(list)
   }
 
+  // Special picks + settled markets feed the leaderboard alongside match
+  // predictions. Markets/outcomes are global; pass memberIds to scope picks
+  // to a league, or null for the overall table.
+  async function fetchSpecialsData(memberIds) {
+    let predQuery = supabase
+      .from('special_predictions')
+      .select('user_id, market_id, outcome_id')
+    if (memberIds) predQuery = predQuery.in('user_id', memberIds)
+
+    const [predsRes, marketsRes, outcomesRes] = await Promise.all([
+      predQuery,
+      supabase.from('special_markets').select('id, result_outcome_id').not('result_outcome_id', 'is', null),
+      supabase.from('special_outcomes').select('id, market_id, odds, frozen_odds'),
+    ])
+
+    return {
+      specialPredictions: predsRes.data ?? [],
+      settledMarkets: marketsRes.data ?? [],
+      specialOutcomes: outcomesRes.data ?? [],
+    }
+  }
+
   async function fetchLeagueData(leagueId) {
     setLoadingLeague(true)
     const { data: members, error: membersError } = await supabase
@@ -67,11 +89,15 @@ export default function Ligaer() {
 
     if (profilesRes.error || predsRes.error) { setLoadingLeague(false); return }
 
+    const specials = await fetchSpecialsData(memberIds)
     const playedMatches = matches.filter(m => m.result !== null)
     setLeagueData(prev => ({
       ...prev,
       [leagueId]: {
-        rows: computeLeaderboard(profilesRes.data, predsRes.data, playedMatches),
+        rows: computeLeaderboard(
+          profilesRes.data, predsRes.data, playedMatches,
+          specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
+        ),
         profiles: profilesRes.data,
         predictions: predsRes.data,
       }
@@ -88,12 +114,19 @@ export default function Ligaer() {
 
     if (profilesRes.error || predsRes.error) { setLoadingOverall(false); return }
 
-    const usersWithPreds = new Set(predsRes.data.map(p => p.user_id))
-    const filteredProfiles = profilesRes.data.filter(p => usersWithPreds.has(p.user_id))
+    const specials = await fetchSpecialsData(null)
+    const usersWithPicks = new Set([
+      ...predsRes.data.map(p => p.user_id),
+      ...specials.specialPredictions.map(p => p.user_id),
+    ])
+    const filteredProfiles = profilesRes.data.filter(p => usersWithPicks.has(p.user_id))
 
     const playedMatches = matches.filter(m => m.result !== null)
     setOverallData({
-      rows: computeLeaderboard(filteredProfiles, predsRes.data, playedMatches),
+      rows: computeLeaderboard(
+        filteredProfiles, predsRes.data, playedMatches,
+        specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
+      ),
       playedCount: playedMatches.length,
       predictions: predsRes.data,
     })

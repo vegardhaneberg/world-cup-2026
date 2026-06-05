@@ -3,6 +3,7 @@ import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
 import Matches from "./Matches";
 import PlayedMatches from "./PlayedMatches";
+import Specials from "./Specials";
 import { isMatchHidden } from "../data/matchUtils";
 import { boostedPoints } from "../data/scoring";
 
@@ -75,9 +76,19 @@ export default function Tipping({ onPick }) {
         >
           Spilte
         </button>
+        <button
+          className="subtab"
+          role="tab"
+          aria-selected={sub === "spesialer"}
+          onClick={() => setSub("spesialer")}
+        >
+          Spesialer
+        </button>
       </div>
 
-      {sub === "kommende" ? <Matches onPick={onPick} /> : <PlayedMatches />}
+      {sub === "kommende" && <Matches onPick={onPick} />}
+      {sub === "spilte" && <PlayedMatches />}
+      {sub === "spesialer" && <Specials />}
 
       {sub === "kommende" && <Coupon predictions={predictions} />}
     </div>

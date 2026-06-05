@@ -6,6 +6,7 @@ import {
   usePredictions,
 } from "./context/PredictionContext";
 import { MatchProvider } from "./context/MatchContext";
+import { SpecialsProvider } from "./context/SpecialsContext";
 import Login from "./pages/Login";
 import Tipping from "./pages/Tipping";
 import Ligaer from "./pages/Ligaer";
@@ -220,7 +221,9 @@ export default function App() {
       <AuthProvider>
         <MatchProvider>
           <PredictionProvider>
-            <AppRoutes />
+            <SpecialsProvider>
+              <AppRoutes />
+            </SpecialsProvider>
           </PredictionProvider>
         </MatchProvider>
       </AuthProvider>

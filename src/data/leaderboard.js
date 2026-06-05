@@ -1,6 +1,20 @@
 import { boostedPoints } from './scoring'
+import { specialPoints } from './specials'
 
-export function computeLeaderboard(profiles, allPredictions, playedMatches) {
+// Builds the ranked table. Match predictions drive the "X av Y rette" stats;
+// settled special markets (e.g. Verdensmester) only fold into the total score.
+//
+//   specialPredictions: [{ user_id, market_id, outcome_id }]
+//   settledMarkets:     [{ id, result_outcome_id }]  (only markets with a result)
+//   specialOutcomes:    [{ id, odds, frozen_odds }]  (for reward lookup)
+export function computeLeaderboard(
+  profiles,
+  allPredictions,
+  playedMatches,
+  specialPredictions = [],
+  settledMarkets = [],
+  specialOutcomes = [],
+) {
   const resultMap = Object.fromEntries(playedMatches.map(m => [m.id, m]))
   const playedMatchIds = new Set(playedMatches.map(m => m.id))
 
@@ -8,6 +22,15 @@ export function computeLeaderboard(profiles, allPredictions, playedMatches) {
   for (const p of allPredictions) {
     if (!predByUser[p.user_id]) predByUser[p.user_id] = {}
     predByUser[p.user_id][p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
+  }
+
+  // Specials: one pick per (user, market); reward when it matches the result.
+  const outcomeById = Object.fromEntries(specialOutcomes.map(o => [o.id, o]))
+  const settled = settledMarkets.filter(m => m.result_outcome_id)
+  const specialByUser = {}
+  for (const sp of specialPredictions) {
+    if (!specialByUser[sp.user_id]) specialByUser[sp.user_id] = {}
+    specialByUser[sp.user_id][sp.market_id] = sp.outcome_id
   }
 
   return profiles.map(profile => {
@@ -25,6 +48,14 @@ export function computeLeaderboard(profiles, allPredictions, playedMatches) {
           : m.pointsAway
         if (pred.boosted) pts = boostedPoints(pts) // upside-only: double a correct boosted pick (capped)
         score += pts
+      }
+    }
+
+    // Settled specials add ceil(frozen_odds ?? odds) — no cap. Stats unchanged.
+    const userSpecials = specialByUser[profile.user_id] ?? {}
+    for (const m of settled) {
+      if (userSpecials[m.id] === m.result_outcome_id) {
+        score += specialPoints(outcomeById[m.result_outcome_id])
       }
     }
 

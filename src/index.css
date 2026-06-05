@@ -439,6 +439,40 @@ button { font-family: var(--ff-body); cursor: pointer; }
   text-transform: uppercase; color: var(--ink-2); text-align: center;
 }
 
+/* ---- Spesialer (outright bets) ---- */
+.special-search {
+  width: 100%; padding: 11px 14px; margin-bottom: 14px;
+  border: 1px solid var(--line-2); border-radius: var(--r);
+  background: var(--card); color: var(--ink);
+  font-family: var(--ff-body); font-size: 14px; font-weight: 600;
+}
+.special-search::placeholder { color: var(--ink-2); }
+.special-search:focus { outline: none; border-color: var(--ink); }
+
+.special-list { display: flex; flex-direction: column; gap: 8px; }
+.special-card {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  background: var(--card); border: 1px solid var(--line-2); border-radius: var(--r);
+  padding: 10px 14px; color: var(--ink);
+  transition: background 0.12s, border-color 0.12s;
+}
+.special-card[role="button"] { cursor: pointer; }
+.special-card.locked { cursor: default; }
+.special-card .team-crest, .special-card .disc { width: 30px; height: 30px; }
+.special-name { font-weight: 700; font-size: 15px; flex: 1; min-width: 0; }
+.special-odds { font-family: var(--ff-display); font-size: 17px; color: var(--ink); }
+.special-pts {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--ink-2); flex: 0 0 auto; min-width: 64px; text-align: right;
+}
+.special-card.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.special-card.selected .special-odds { color: var(--paper); }
+.special-card.selected .special-pts { color: rgba(244, 239, 229, 0.7); }
+.special-card.won { background: #d4edda; border-color: #1a5c2e; color: #1a5c2e; }
+.special-card.won .special-odds, .special-card.won .special-pts { color: #1a5c2e; }
+.special-card.lost { opacity: 0.6; }
+
 /* ---- Toast ---- */
 .toast {
   position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
