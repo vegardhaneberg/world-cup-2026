@@ -440,6 +440,61 @@ button { font-family: var(--ff-body); cursor: pointer; }
 }
 
 /* ---- Spesialer (outright bets) ---- */
+/* World-champion bet rendered as a standalone, expandable match-style card. */
+.special-bet .special-bet-head {
+  width: 100%; background: none; cursor: pointer; font: inherit;
+  border: none; border-bottom: 1px solid var(--line);
+}
+.special-bet .special-bet-head--static { cursor: default; }
+/* Title styled like the "VM Bongen" wordmark: display font, uppercase, navy */
+.special-bet .special-bet-head { padding-top: 13px; padding-bottom: 13px; }
+.special-bet .special-bet-head .grp {
+  font-family: var(--ff-display); font-size: 22px; letter-spacing: 0.4px;
+  text-transform: uppercase; line-height: 1; color: #20283f;
+}
+.special-bet-action {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: var(--ink-2);
+}
+.special-bet-chevron { margin-left: 8px; font-size: 9px; color: var(--ink-2); }
+.special-bet-body { padding: 14px 16px 16px; }
+
+/* Chosen-country hero: tinted with the nation's flag colours (inline styles) */
+.special-hero {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+}
+.special-hero--dim { opacity: 0.55; }
+.special-hero-crest { flex: 0 0 auto; line-height: 0; }
+.special-hero-crest .team-crest,
+.special-hero-crest .disc { width: 44px; height: 44px; }
+.special-hero-crest .crest-link:hover { transform: none; opacity: 1; }
+.special-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.special-hero-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+}
+.special-hero-name {
+  font-family: var(--ff-display); font-size: 24px; line-height: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.special-hero-pts {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  min-width: 58px; padding: 7px 12px; border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+.special-hero-pts b { font-family: var(--ff-display); font-size: 22px; line-height: 1; }
+.special-hero-pts span {
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Prompt shown when no country is chosen yet */
+.special-empty {
+  width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 16px 18px; color: var(--ink-2);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.4px;
+}
+.special-empty:hover { color: var(--ink); }
+
 .special-search {
   width: 100%; padding: 11px 14px; margin-bottom: 14px;
   border: 1px solid var(--line-2); border-radius: var(--r);
@@ -461,16 +516,14 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .special-card.locked { cursor: default; }
 .special-card .team-crest, .special-card .disc { width: 30px; height: 30px; }
 .special-name { font-weight: 700; font-size: 15px; flex: 1; min-width: 0; }
-.special-odds { font-family: var(--ff-display); font-size: 17px; color: var(--ink); }
-.special-pts {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
-  color: var(--ink-2); flex: 0 0 auto; min-width: 64px; text-align: right;
+.special-odds {
+  font-family: var(--ff-display); font-size: 17px; color: var(--ink);
+  flex: 0 0 auto; text-align: right;
 }
 .special-card.selected { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .special-card.selected .special-odds { color: var(--paper); }
-.special-card.selected .special-pts { color: rgba(244, 239, 229, 0.7); }
 .special-card.won { background: #d4edda; border-color: #1a5c2e; color: #1a5c2e; }
-.special-card.won .special-odds, .special-card.won .special-pts { color: #1a5c2e; }
+.special-card.won .special-odds { color: #1a5c2e; }
 .special-card.lost { opacity: 0.6; }
 
 /* ---- Toast ---- */

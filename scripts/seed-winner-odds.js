@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { EXCLUDED_WINNER_TEAMS } from './excludedWinnerTeams.js';
 
 // One-off seed of the Verdensmester (tournament winner) special market from the
 // committed src/data/winnerOdds.json snapshot. The live sync script
@@ -54,8 +55,10 @@ async function main() {
   }
 
   // Average + round each team's odds, then sort favourites first.
+  // Skip teams that did not qualify for WC 2026 (see excludedWinnerTeams.js).
   const outcomes = [];
   for (const name of names) {
+    if (EXCLUDED_WINNER_TEAMS.has(name)) continue;
     const avg = avgOutright(market.bookmakers, name);
     if (avg == null) continue;
     outcomes.push({ name, odds: Math.round(avg * 100) / 100 });

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { EXCLUDED_WINNER_TEAMS } from './excludedWinnerTeams.js';
 
 // Live sync for the Verdensmester (tournament winner) special market.
 //
@@ -63,7 +64,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { data: outcomes, error: outErr } = await supabase
+  const { data: allOutcomes, error: outErr } = await supabase
     .from('special_outcomes')
     .select('id, name, odds, frozen_odds')
     .eq('market_id', market.id);
@@ -71,6 +72,25 @@ async function main() {
     console.error('ERROR reading outcomes:', outErr.message);
     process.exit(1);
   }
+
+  // Drop any outcomes for teams that did not qualify for WC 2026. This keeps the
+  // market self-healing: even if such a row was seeded earlier, it is removed on
+  // the next sync (cascades to any user picks of that outcome).
+  const excluded = allOutcomes.filter(o => EXCLUDED_WINNER_TEAMS.has(o.name));
+  if (excluded.length) {
+    const { error: delErr } = await supabase
+      .from('special_outcomes')
+      .delete()
+      .in('id', excluded.map(o => o.id));
+    if (delErr) {
+      console.error('ERROR removing non-qualified outcomes:', delErr.message);
+      process.exit(1);
+    }
+    console.log(`Removed ${excluded.length} non-qualified outcome(s): ${excluded.map(o => o.name).join(', ')}`);
+  }
+
+  // Only sync odds for teams still in the market.
+  const outcomes = allOutcomes.filter(o => !EXCLUDED_WINNER_TEAMS.has(o.name));
 
   const locked = market.locks_at ? Date.now() >= new Date(market.locks_at).getTime() : false;
   const alreadyFrozen = outcomes.some(o => o.frozen_odds != null);
@@ -130,7 +150,9 @@ async function main() {
   }
 
   // Teams the API priced but we don't have seeded (informational only).
+  // Excluded (non-qualified) teams are priced by the API on purpose-ignore them.
   for (const name of oddsMap.keys()) {
+    if (EXCLUDED_WINNER_TEAMS.has(name)) continue;
     if (!outcomes.some(o => o.name === name)) unmatched.push(name);
   }
   if (unmatched.length) {
