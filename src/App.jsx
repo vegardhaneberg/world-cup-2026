@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useSearchParams,
+  useNavigate,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import {
   PredictionProvider,
@@ -35,8 +42,18 @@ function BallCrest() {
 function Football() {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true">
-      <circle cx="16" cy="16" r="14.3" fill="#fdf3e7" stroke="#20283f" strokeWidth="2.4" />
-      <polygon points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3" fill="#20283f" />
+      <circle
+        cx="16"
+        cy="16"
+        r="14.3"
+        fill="#fdf3e7"
+        stroke="#20283f"
+        strokeWidth="2.4"
+      />
+      <polygon
+        points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3"
+        fill="#20283f"
+      />
       <g stroke="#20283f" strokeWidth="2" strokeLinecap="round">
         <line x1="16" y1="10.5" x2="16" y2="2.5" />
         <line x1="21.23" y1="14.3" x2="28.84" y2="11.83" />
@@ -100,7 +117,9 @@ function MainView() {
   const { user } = useAuth();
   const { predict } = usePredictions();
   const [searchParams] = useSearchParams();
-  const initialTab = ["ligaer", "regler"].includes(searchParams.get("tab")) ? searchParams.get("tab") : "tip";
+  const initialTab = ["ligaer", "regler"].includes(searchParams.get("tab"))
+    ? searchParams.get("tab")
+    : "tip";
   const [tab, setTab] = useState(initialTab);
 
   const fullName = user?.user_metadata?.full_name ?? user?.email ?? "Deg";
@@ -117,7 +136,7 @@ function MainView() {
           <div className="wordmark">
             <div className="l1">
               <span className="tl-vm">VM</span>
-              <span className="tl-bongen">Bongen</span>
+              <span className="tl-bongen">Bongen </span>
               <span className="cw-usa">2</span>
               <span className="tl-ball">
                 <Football />
@@ -178,13 +197,13 @@ function AppRoutes() {
 
   useEffect(() => {
     if (user) {
-      const pendingToken = localStorage.getItem('pendingJoinToken')
+      const pendingToken = localStorage.getItem("pendingJoinToken");
       if (pendingToken) {
-        localStorage.removeItem('pendingJoinToken')
-        navigate(`/join/${pendingToken}`, { replace: true })
+        localStorage.removeItem("pendingJoinToken");
+        navigate(`/join/${pendingToken}`, { replace: true });
       }
     }
-  }, [user])
+  }, [user]);
 
   if (loading) {
     return (

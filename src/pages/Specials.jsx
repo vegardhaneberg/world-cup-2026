@@ -47,7 +47,7 @@ function buildGroupTeams(data) {
 const GROUP_TEAMS = buildGroupTeams(matchesData);
 
 function isGroupMarket(market) {
-  return market.key === "top_scoring_group";
+  return market.key === "top_scoring_group" || market.key === "most_carded_group";
 }
 
 function ChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
