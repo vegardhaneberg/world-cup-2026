@@ -435,6 +435,26 @@ button { font-family: var(--ff-body); cursor: pointer; }
 /* ---- Spesialer (outright bets) ---- */
 /* World-champion bet rendered as a standalone, expandable match-style card. */
 .special-bet { margin-bottom: 20px; }
+/* Footer note in a locked/settled card (the "Avgjøres etter …" or "Vinner …"
+   line): drop the tall default empty-state margin so it only fits its text. */
+.special-bet .lb-empty-note { margin-top: 0; padding: 12px 16px; }
+/* Settled picks (replaces the old "Riktig"/"Bommet" text label): a coloured cap
+   bar across the top of the card — green = correct, red = wrong. */
+.special-bet--correct,
+.special-bet--wrong { position: relative; }
+.special-bet--correct::before,
+.special-bet--wrong::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 6px; z-index: 3;
+}
+.special-bet--correct::before { background: #1a5c2e; }
+.special-bet--wrong::before { background: var(--accent); }
+/* Result label in the card header (replaces "Låst" once settled). */
+.special-status--won { color: #1a5c2e; font-weight: 800; }
+.special-status--lost { color: var(--accent); font-weight: 800; }
+/* Specials tab inside the user-predictions modal: roomier spacing between
+   cards than the default for an easier read. */
+.upred-specials { display: flex; flex-direction: column; gap: 28px; padding-top: 6px; }
+.upred-specials .special-bet { margin-bottom: 0; }
 .special-bet .special-bet-head {
   width: 100%; background: none; cursor: pointer; font: inherit;
   border: none; border-bottom: 1px solid var(--line);
@@ -717,12 +737,15 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .modal-close:hover { color: var(--ink); }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
 
-/* Tall modal that scrolls its body (e.g. a user's full prediction list) */
+/* Tall modal that scrolls its body (e.g. a user's full prediction list).
+   Fixed height keeps the modal the same size across tab switches. */
 .modal--tall {
-  max-width: 480px; max-height: 85vh;
+  max-width: 480px; height: 85vh;
   display: flex; flex-direction: column;
 }
-.modal--tall .modal-body { overflow-y: auto; }
+.modal--tall .modal-body { flex: 1; min-height: 0; overflow-y: auto; }
+/* Inset the tab toggle to match the body's 20px gutters (no edge-to-edge). */
+.modal .subtabs { margin: 14px 20px 0; }
 
 .upred-stat {
   font-size: 11px; font-weight: 600; color: var(--ink-2); margin-top: 3px;

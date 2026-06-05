@@ -284,13 +284,19 @@ function PlayerOutcomeRow({ outcome, selected, onPick, locked, won, lost }) {
   );
 }
 
-function MarketSection({ market, picks, pickSpecial }) {
-  const [query, setQuery] = useState("");
-  const [expanded, setExpanded] = useState(false);
-
-  const locked = isSpecialLocked(market);
+// Read-only render of a locked market: the user's chosen hero (or a no-pick
+// note), plus the settled winner line or a "decided later" note. Shared by the
+// Tipping specials (locked branch) and the leaderboard UserPredictionsModal, so
+// both stay in sync. `statusLabel` is the unsettled hero label (first-person
+// "Ditt valg" on Tipping, neutral "Valg" in the modal); settled labels are
+// always neutral. `noPickMessage` overrides the no-pick fallback.
+export function SpecialResultCard({
+  market,
+  pickedId,
+  statusLabel = "Ditt valg",
+  noPickMessage,
+}) {
   const settled = (market.result_outcome_ids?.length ?? 0) > 0;
-  const pickedId = picks[market.id];
   const pickedOutcome = market.outcomes.find((o) => o.id === pickedId) ?? null;
 
   const won = settled && market.result_outcome_ids?.includes(pickedOutcome?.id);
@@ -307,46 +313,80 @@ function MarketSection({ market, picks, pickSpecial }) {
     : isTopScorer
     ? PlayerChosenHero
     : ChosenHero;
+
+  const lockedNote = isGroup
+    ? "Avgjøres etter gruppespillet."
+    : "Avgjøres etter finalen.";
+  const fallback =
+    noPickMessage ?? `Du valgte ingen ${market.title.toLowerCase()}.`;
+
+  // Settled outcome is shown via a green/red border on the card rather than a
+  // textual "Riktig"/"Bommet" label, so the hero keeps its neutral statusLabel.
+  const cardClass =
+    "match special-bet" +
+    (won ? " special-bet--correct" : "") +
+    (lost ? " special-bet--wrong" : "");
+
+  return (
+    <div className={cardClass}>
+      <div className="match-top special-bet-head special-bet-head--static">
+        <span className="grp">{market.title}</span>
+        <span className="ko">
+          {settled ? (
+            <span className={won ? "special-status--won" : "special-status--lost"}>
+              {won ? "Vunnet" : "Tapt"}
+            </span>
+          ) : (
+            "Låst"
+          )}
+        </span>
+      </div>
+
+      {pickedOutcome ? (
+        <HeroComp outcome={pickedOutcome} statusLabel={statusLabel} dim={lost} />
+      ) : (
+        <p className="lb-empty-note">{fallback}</p>
+      )}
+
+      {settled ? (
+        resultOutcomes.length > 0 && (
+          <p className="lb-empty-note">
+            Fasit: {resultOutcomes.map((o) => o.name).join(", ")} @{" "}
+            {specialPoints(resultOutcomes[0])}
+          </p>
+        )
+      ) : (
+        <p className="lb-empty-note">{lockedNote}</p>
+      )}
+    </div>
+  );
+}
+
+function MarketSection({ market, picks, pickSpecial }) {
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  const locked = isSpecialLocked(market);
+
+  if (locked) {
+    return <SpecialResultCard market={market} pickedId={picks[market.id]} />;
+  }
+
+  const pickedId = picks[market.id];
+  const pickedOutcome = market.outcomes.find((o) => o.id === pickedId) ?? null;
+
+  const isGroup = isGroupMarket(market);
+  const isTopScorer = isTopScorerMarket(market);
+  const HeroComp = isGroup
+    ? GroupChosenHero
+    : isTopScorer
+    ? PlayerChosenHero
+    : ChosenHero;
   const RowComp = isGroup
     ? GroupOutcomeRow
     : isTopScorer
     ? PlayerOutcomeRow
     : OutcomeRow;
-
-  if (locked) {
-    const statusLabel = settled ? (won ? "Riktig! 🎉" : "Bommet") : "Låst";
-    const lockedNote = isGroup
-      ? "Avgjøres etter gruppespillet."
-      : "Avgjøres etter finalen.";
-
-    return (
-      <div className="match special-bet">
-        <div className="match-top special-bet-head special-bet-head--static">
-          <span className="grp">{market.title}</span>
-          <span className="ko">Låst</span>
-        </div>
-
-        {pickedOutcome ? (
-          <HeroComp outcome={pickedOutcome} statusLabel={statusLabel} dim={lost} />
-        ) : (
-          <p className="lb-empty-note">
-            Du valgte ingen {market.title.toLowerCase()}.
-          </p>
-        )}
-
-        {settled ? (
-          resultOutcomes.length > 0 && (
-            <p className="lb-empty-note">
-              Vinner: {resultOutcomes.map((o) => o.name).join(", ")} ·{" "}
-              {specialPoints(resultOutcomes[0])} p
-            </p>
-          )
-        ) : (
-          <p className="lb-empty-note">{lockedNote}</p>
-        )}
-      </div>
-    );
-  }
 
   const q = query.trim().toLowerCase();
   const filtered =
