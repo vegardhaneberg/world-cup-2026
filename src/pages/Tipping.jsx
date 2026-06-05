@@ -5,7 +5,13 @@ import Matches from "./Matches";
 import PlayedMatches from "./PlayedMatches";
 import Specials from "./Specials";
 import { isMatchHidden } from "../data/matchUtils";
-import { boostedPoints } from "../data/scoring";
+import {
+  boostedPoints,
+  groupBonus,
+  isGroupStageMatch,
+  GROUP_BONUS_STEP,
+  GROUP_BONUS_POINTS,
+} from "../data/scoring";
 
 function Coupon({ predictions }) {
   const { matches } = useMatches();
@@ -27,14 +33,61 @@ function Coupon({ predictions }) {
       <div className="coupon-in">
         <div className="progress">
           <div className="row">
-            <span className="a">
-              {done} / {total} tippet
-            </span>
+            <span className="a">Tippelappen</span>
             <span className="b">Mulig utbytte: {possible} p</span>
           </div>
           <div className="bar">
             <i style={{ width: pct + "%" }} />
           </div>
+          <div className="bonus-note">
+            <strong>{done}</strong> av {total} tilgjengelige kamper tippet
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BonusTracker({ predictions }) {
+  const { matches } = useMatches();
+
+  // Group-stage bonus tracker — realized only: count played group matches whose
+  // pick matched the result. Single source of truth via scoring.js so this can
+  // never disagree with the leaderboard.
+  const groupMatches = matches.filter(isGroupStageMatch);
+  const groupCorrect = groupMatches.filter(
+    (m) => m.result != null && predictions[m.id] === m.result,
+  ).length;
+  const groupRemaining = groupMatches.filter((m) => m.result == null).length;
+  const earned = groupBonus(groupCorrect);
+  const towardNext = groupCorrect % GROUP_BONUS_STEP;
+  const remainingToNext = GROUP_BONUS_STEP - towardNext;
+  const modPct = (towardNext / GROUP_BONUS_STEP) * 100;
+  const frozen = groupRemaining === 0;
+
+  return (
+    <div className="coupon">
+      <div className="coupon-in">
+        <div className="progress group-bonus">
+          <div className="row">
+            <span className="a">Gruppespill-bonus</span>
+            <span className="b">
+              {frozen ? `Bonus: +${earned} p` : `Bonus så langt: ${earned} p`}
+            </span>
+          </div>
+          {frozen ? (
+            <div className="bonus-note">Gruppespill ferdig</div>
+          ) : (
+            <>
+              <div className="bar">
+                <i style={{ width: modPct + "%" }} />
+              </div>
+              <div className="bonus-note">
+                <strong>{remainingToNext}</strong> rette igjen til neste bonus (+
+                {GROUP_BONUS_POINTS} p)
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -91,6 +144,7 @@ export default function Tipping({ onPick }) {
       {sub === "spesialer" && <Specials />}
 
       {sub === "kommende" && <Coupon predictions={predictions} />}
+      {sub === "spilte" && <BonusTracker predictions={predictions} />}
     </div>
   );
 }
