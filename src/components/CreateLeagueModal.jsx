@@ -1,63 +1,70 @@
-import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabase";
 
 export default function CreateLeagueModal({ onClose, onCreated }) {
-  const { user } = useAuth()
-  const [name, setName] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [inviteLink, setInviteLink] = useState(null)
-  const [copied, setCopied] = useState(false)
-  const [error, setError] = useState(null)
+  const { user } = useAuth();
+  const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [inviteLink, setInviteLink] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    if (!name.trim()) return
-    setSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    if (!name.trim()) return;
+    setSubmitting(true);
+    setError(null);
 
     const { data: league, error: leagueError } = await supabase
-      .from('leagues')
+      .from("leagues")
       .insert({ name: name.trim(), created_by: user.id })
       .select()
-      .single()
+      .single();
 
     if (leagueError) {
-      setError('Kunne ikke opprette liga.')
-      setSubmitting(false)
-      return
+      setError("Kunne ikke opprette liga.");
+      setSubmitting(false);
+      return;
     }
 
-    await supabase.from('league_members').insert({ league_id: league.id, user_id: user.id })
+    await supabase
+      .from("league_members")
+      .insert({ league_id: league.id, user_id: user.id });
 
-    setInviteLink(`${window.location.origin}/join/${league.invite_token}`)
-    setSubmitting(false)
-    onCreated(league)
+    setInviteLink(`${window.location.origin}/join/${league.invite_token}`);
+    setSubmitting(false);
+    onCreated(league);
   }
 
   function copyLink() {
-    navigator.clipboard.writeText(inviteLink)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    navigator.clipboard.writeText(inviteLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-overlay"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="modal">
         <div className="modal-header">
           <h3>Opprett liga</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         {!inviteLink ? (
           <form onSubmit={handleSubmit} className="modal-body">
-            <label className="field-label">Lianavn</label>
+            <label className="field-label">Liganavn</label>
             <input
               className="field-input"
               type="text"
               placeholder="F.eks. Kontoret '26"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               autoFocus
               maxLength={60}
             />
@@ -67,7 +74,7 @@ export default function CreateLeagueModal({ onClose, onCreated }) {
               className="btn-accent"
               disabled={!name.trim() || submitting}
             >
-              {submitting ? 'Oppretter…' : 'Opprett liga'}
+              {submitting ? "Oppretter…" : "Opprett liga"}
             </button>
           </form>
         ) : (
@@ -77,15 +84,20 @@ export default function CreateLeagueModal({ onClose, onCreated }) {
             <div className="invite-link-box">
               <span className="invite-link-text">{inviteLink}</span>
               <button type="button" className="btn-copy" onClick={copyLink}>
-                {copied ? '✓ Kopiert' : 'Kopier'}
+                {copied ? "✓ Kopiert" : "Kopier"}
               </button>
             </div>
-            <button type="button" className="btn-accent" onClick={onClose} style={{ marginTop: 16 }}>
+            <button
+              type="button"
+              className="btn-accent"
+              onClick={onClose}
+              style={{ marginTop: 16 }}
+            >
               Ferdig
             </button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
