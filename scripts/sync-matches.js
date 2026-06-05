@@ -38,6 +38,15 @@ function buildVenueMap() {
   return map;
 }
 
+function deriveResult(winner, homeScore, awayScore) {
+  if (winner === 'HOME_TEAM') return 'home';
+  if (winner === 'AWAY_TEAM') return 'away';
+  if (winner === 'DRAW') return 'draw';
+  if (homeScore > awayScore) return 'home';
+  if (awayScore > homeScore) return 'away';
+  return 'draw';
+}
+
 async function fetchAllMatches() {
   const url = `https://api.football-data.org/v4/competitions/${COMPETITION_CODE}/matches`;
   console.log(`Requesting: ${url}`);
@@ -89,6 +98,10 @@ async function main() {
       continue;
     }
 
+    const homeScore = apiMatch.score?.fullTime?.home ?? null;
+    const awayScore = apiMatch.score?.fullTime?.away ?? null;
+    const isFinished = apiMatch.status === 'FINISHED' && homeScore != null && awayScore != null;
+
     const row = {
       id: apiMatch.id,
       utc_date: apiMatch.utcDate,
@@ -100,6 +113,10 @@ async function main() {
       away_team: awayTeam,
       venue: venueMap.get(`${homeTeam}|${awayTeam}`) ?? null,
       last_updated: apiMatch.lastUpdated ?? null,
+      home_score: isFinished ? homeScore : null,
+      away_score: isFinished ? awayScore : null,
+      result: isFinished ? deriveResult(apiMatch.score?.winner, homeScore, awayScore) : null,
+      played_at: isFinished ? (apiMatch.utcDate ?? null) : null,
     };
 
     const { error } = await supabase
@@ -109,8 +126,11 @@ async function main() {
     if (error) {
       console.error(`ERROR upserting match ${apiMatch.id} (${homeTeam} vs ${awayTeam}): ${error.message}`);
       skipped++;
+    } else if (isFinished) {
+      console.log(`OK id=${apiMatch.id} ${homeTeam} ${homeScore}–${awayScore} ${awayTeam} (${row.result})`);
+      upserted++;
     } else {
-      console.log(`OK id=${apiMatch.id} ${homeTeam} vs ${awayTeam} [${apiMatch.status}]`);
+      console.log(`OK id=${apiMatch.id} [${apiMatch.status}] ${homeTeam} vs ${awayTeam}`);
       upserted++;
     }
   }
