@@ -19,13 +19,12 @@ export default function Login() {
           <span className="cw-can">2</span>
           <span className="cw-mex">6</span>
         </div>
-        <div className="login-subtitle">Nord-Amerika · Sommeren '26</div>
+        <div className="login-subtitle">Gjett sommerens VM-resultater!</div>
         <hr className="login-divider" />
         <button className="btn-google" onClick={() => login()}>
           <GoogleIcon />
           Logg inn med Google
         </button>
-        <p className="login-note">Kun for organisasjonsmedlemmer.</p>
       </div>
     </div>
   );
@@ -56,9 +55,23 @@ function BallCrest() {
 
 function Football() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" style={{ width: "100%", height: "100%" }}>
-      <circle cx="16" cy="16" r="14.3" fill="#fdf3e7" stroke="#20283f" strokeWidth="2.4" />
-      <polygon points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3" fill="#20283f" />
+    <svg
+      viewBox="0 0 32 32"
+      aria-hidden="true"
+      style={{ width: "100%", height: "100%" }}
+    >
+      <circle
+        cx="16"
+        cy="16"
+        r="14.3"
+        fill="#fdf3e7"
+        stroke="#20283f"
+        strokeWidth="2.4"
+      />
+      <polygon
+        points="16,10.5 21.23,14.3 19.23,20.45 12.77,20.45 10.77,14.3"
+        fill="#20283f"
+      />
       <g stroke="#20283f" strokeWidth="2" strokeLinecap="round">
         <line x1="16" y1="10.5" x2="16" y2="2.5" />
         <line x1="21.23" y1="14.3" x2="28.84" y2="11.83" />
