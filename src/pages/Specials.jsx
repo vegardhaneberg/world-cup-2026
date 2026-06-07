@@ -526,7 +526,7 @@ export default function Specials() {
   }
 
   return (
-    <div>
+    <div style={{ paddingTop: "16px" }}>
       {markets.map((market) => (
         <MarketSection
           key={market.id}
