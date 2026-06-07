@@ -2,7 +2,14 @@ import { useState } from "react";
 import { useSpecials } from "../context/SpecialsContext";
 import TeamCrest from "../components/TeamCrest";
 import { getTeamInfo, NATIONALITY_NB_TO_EN } from "../data/dummyData";
-import { specialOdds, specialPoints, isSpecialLocked } from "../data/specials";
+import {
+  specialOdds,
+  specialPoints,
+  isSpecialLocked,
+  earliestUnlockedDeadline,
+  isEarliestUnlockedDeadline,
+} from "../data/specials";
+import { useCountdown, formatCountdown } from "../data/countdown";
 import matchesData from "../data/matches.json";
 import topScorerOdds from "../data/topScorerOdds.json";
 
@@ -362,7 +369,7 @@ export function SpecialResultCard({
   );
 }
 
-function MarketSection({ market, picks, pickSpecial }) {
+function MarketSection({ market, markets, picks, pickSpecial, msLeft }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
 
@@ -373,6 +380,13 @@ function MarketSection({ market, picks, pickSpecial }) {
   }
 
   const pickedId = picks[market.id];
+
+  // The deadline countdown shows only on the card(s) with the earliest unlocked
+  // deadline (ties → all of them). Amber once a pick exists, red while the user
+  // still owes a pick — the real stake is failing to deliver before lock.
+  const showDeadline =
+    isEarliestUnlockedDeadline(market, markets) && msLeft > 0;
+  const hasPick = pickedId != null;
   const pickedOutcome = market.outcomes.find((o) => o.id === pickedId) ?? null;
 
   const isGroup = isGroupMarket(market);
@@ -407,6 +421,15 @@ function MarketSection({ market, picks, pickSpecial }) {
 
   return (
     <div className={`match special-bet${expanded ? " special-bet--open" : ""}`}>
+      {showDeadline && (
+        <div
+          className={`match-warning-banner${hasPick ? "" : " match-warning-banner--urgent"}`}
+        >
+          {hasPick
+            ? `Låses om ${formatCountdown(msLeft)}`
+            : `Du mangler å levere · Låses om ${formatCountdown(msLeft)}`}
+        </div>
+      )}
       <button
         type="button"
         className="match-top special-bet-head"
@@ -479,6 +502,12 @@ function MarketSection({ market, picks, pickSpecial }) {
 export default function Specials() {
   const { markets, picks, loading, pickSpecial } = useSpecials();
 
+  // A single page-level ticker on the earliest unlocked deadline: it re-renders
+  // the whole list at the right cadence (so MM:SS ticks under an hour) and, when
+  // it hits zero, the recompute flips that card to SpecialResultCard and the
+  // next-earliest deadline takes over the banner. One interval, not one per card.
+  const msLeft = useCountdown(earliestUnlockedDeadline(markets));
+
   if (loading) return <div className="lb-loading">Laster…</div>;
 
   if (markets.length === 0) {
@@ -491,8 +520,10 @@ export default function Specials() {
         <MarketSection
           key={market.id}
           market={market}
+          markets={markets}
           picks={picks}
           pickSpecial={pickSpecial}
+          msLeft={msLeft}
         />
       ))}
     </div>

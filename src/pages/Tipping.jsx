@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
+import { useSpecials } from "../context/SpecialsContext";
 import Matches from "./Matches";
 import PlayedMatches from "./PlayedMatches";
 import Specials from "./Specials";
-import { isMatchHidden } from "../data/matchUtils";
+import { isMatchHidden, isMatchWarning } from "../data/matchUtils";
+import { isSpecialLocked } from "../data/specials";
 import {
   boostedPoints,
   groupBonus,
@@ -97,8 +99,31 @@ function BonusTracker({ predictions }) {
 export default function Tipping({ onPick }) {
   const { predictions } = usePredictions();
   const { matches, loading } = useMatches();
+  const { markets, picks } = useSpecials();
   const [sub, setSub] = useState("kommende");
   const didInit = useRef(false);
+
+  // The tab badges below are time-sensitive (a match entering its countdown
+  // window, a special locking), so keep them fresh with the same 30s cadence as
+  // the Matches ticker — otherwise a badge wouldn't appear until the next pick.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Specials still open (unlocked) that the user hasn't delivered a pick on —
+  // surfaced as a red notification badge on the Spesialer tab, like a mobile
+  // app. Drops to 0 once everything is picked or every market has locked.
+  const missingSpecials = markets.filter(
+    (m) => !isSpecialLocked(m) && picks[m.id] == null,
+  ).length;
+
+  // Upcoming matches inside their countdown window (the 30-min warning before
+  // lock) with no pick placed yet — the red badge on the Kommende tab.
+  const missingUpcoming = matches.filter(
+    (m) => isMatchWarning(m) && !predictions[m.id],
+  ).length;
 
   // Default to "Kommende"; once matches finish loading, fall back to "Spilte"
   // only if there are no upcoming matches left. Runs once so it never overrides
@@ -120,6 +145,14 @@ export default function Tipping({ onPick }) {
           onClick={() => setSub("kommende")}
         >
           Kommende
+          {missingUpcoming > 0 && (
+            <span
+              className="subtab-badge"
+              aria-label={`${missingUpcoming} kamper må tippes snart`}
+            >
+              {missingUpcoming}
+            </span>
+          )}
         </button>
         <button
           className="subtab"
@@ -136,6 +169,14 @@ export default function Tipping({ onPick }) {
           onClick={() => setSub("spesialer")}
         >
           Spesialer
+          {missingSpecials > 0 && (
+            <span
+              className="subtab-badge"
+              aria-label={`${missingSpecials} spesialer mangler`}
+            >
+              {missingSpecials}
+            </span>
+          )}
         </button>
       </div>
 
