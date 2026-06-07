@@ -21,3 +21,26 @@ export function isSpecialLocked(market) {
   if (!market?.locks_at) return false
   return Date.now() >= new Date(market.locks_at).getTime()
 }
+
+// Earliest still-future deadline among markets, as an ms timestamp, or null if
+// none. Excludes markets with no locks_at and already-locked markets — neither
+// has a deadline left to count down to.
+export function earliestUnlockedDeadline(markets) {
+  let earliest = null
+  for (const m of markets ?? []) {
+    if (!m?.locks_at || isSpecialLocked(m)) continue
+    const t = new Date(m.locks_at).getTime()
+    if (earliest == null || t < earliest) earliest = t
+  }
+  return earliest
+}
+
+// True when `market` is unlocked, has a deadline, and shares the earliest
+// unlocked deadline among `markets`. Ties (several markets locking at the same
+// instant) are all true — the countdown shows on every one of them.
+export function isEarliestUnlockedDeadline(market, markets) {
+  if (!market?.locks_at || isSpecialLocked(market)) return false
+  const earliest = earliestUnlockedDeadline(markets)
+  if (earliest == null) return false
+  return new Date(market.locks_at).getTime() === earliest
+}

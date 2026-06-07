@@ -10,6 +10,7 @@ import {
 import TeamCrest from "../components/TeamCrest";
 import PickBadges from "../components/PickBadges";
 import { boostedPoints } from "../data/scoring";
+import { useCountdown } from "../data/countdown";
 
 function formatTime(dateStr) {
   return new Date(dateStr).toLocaleTimeString("no", {
@@ -96,21 +97,11 @@ const UpcomingCard = memo(function UpcomingCard({
 }) {
   const time = formatTime(match.date);
 
-  const [msLeft, setMsLeft] = useState(0);
   const [movedCue, setMovedCue] = useState(false);
 
-  useEffect(() => {
-    if (!isWarning) return;
-    const lockTime = new Date(match.date).getTime() - 5 * 60 * 1000;
-    const tick = () => {
-      const remaining = Math.max(0, lockTime - Date.now());
-      setMsLeft(remaining);
-      if (remaining === 0) clearInterval(id);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [isWarning, match.date]);
+  // Only count down while in the warning window; the banner is gated on it too.
+  const lockTime = new Date(match.date).getTime() - 5 * 60 * 1000;
+  const msLeft = useCountdown(isWarning ? lockTime : null);
 
   const effectiveLocked = locked || isMatchLocked(match);
 
@@ -186,7 +177,13 @@ const UpcomingCard = memo(function UpcomingCard({
   return (
     <div className={`match${isBoosted ? " match--boosted" : ""}`}>
       {isWarning && msLeft > 0 && (
-        <div className="match-warning-banner">Låses om {countdownDisplay}</div>
+        <div
+          className={`match-warning-banner${prediction ? "" : " match-warning-banner--urgent"}`}
+        >
+          {prediction
+            ? `Låses om ${countdownDisplay}`
+            : `Du mangler å levere · Låses om ${countdownDisplay}`}
+        </div>
       )}
       <div className="match-top">
         <span className="grp">{matchGroupLabel(match)}</span>
