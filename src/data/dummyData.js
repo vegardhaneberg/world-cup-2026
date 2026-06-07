@@ -57,10 +57,10 @@ export function getTeamInfo(name) {
   }
 }
 
-// Norwegian → English nationality names. The top-scorer odds JSON stores
+// Norwegian → English nationality names. The player-market odds JSONs store
 // nationalities in Norwegian ("Frankrike", "Spania", …) while TEAM_INFO and
-// <TeamCrest> key off English names. Covers every nationality in
-// src/data/topScorerOdds.json.
+// <TeamCrest> key off English names. Covers every nationality across
+// src/data/topScorerOdds.json, goldenBallOdds.json and goldenGloveOdds.json.
 export const NATIONALITY_NB_TO_EN = {
   'Frankrike':  'France',
   'England':    'England',
@@ -75,4 +75,17 @@ export const NATIONALITY_NB_TO_EN = {
   'Uruguay':    'Uruguay',
   'USA':        'USA',
   'Sverige':    'Sweden',
+  'Australia':  'Australia',
+  'Canada':     'Canada',
+  'Colombia':   'Colombia',
+  'Ecuador':    'Ecuador',
+  'Japan':      'Japan',
+  'Kroatia':    'Croatia',
+  'Marokko':    'Morocco',
+  'Mexico':     'Mexico',
+  'Senegal':    'Senegal',
+  'Skottland':  'Scotland',
+  'Sveits':     'Switzerland',
+  'Tyrkia':     'Turkey',
+  'Østerrike':  'Austria',
 }

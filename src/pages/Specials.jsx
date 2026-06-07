@@ -12,6 +12,8 @@ import {
 import { useCountdown, formatCountdown } from "../data/countdown";
 import matchesData from "../data/matches.json";
 import topScorerOdds from "../data/topScorerOdds.json";
+import goldenBallOdds from "../data/goldenBallOdds.json";
+import goldenGloveOdds from "../data/goldenGloveOdds.json";
 
 function roundedOdds(outcome) {
   const odds = specialOdds(outcome);
@@ -54,10 +56,14 @@ function buildGroupTeams(data) {
 
 const GROUP_TEAMS = buildGroupTeams(matchesData);
 
-// Build { 'Kylian Mbappe': 'Frankrike', ... } from topScorerOdds.json — the
-// single source of truth for the player list and their nationalities.
+// Build { 'Kylian Mbappe': 'Frankrike', ... } by merging all three player-market
+// odds JSONs (top scorer + golden ball + golden glove) — the single source of
+// truth for each player's nationality. Players appearing in more than one market
+// collapse harmlessly (same name → same nationality).
 const PLAYER_NATIONALITY = Object.fromEntries(
-  (topScorerOdds.available_bets ?? []).map((b) => [b.player, b.nationality]),
+  [topScorerOdds, goldenBallOdds, goldenGloveOdds]
+    .flatMap((odds) => odds.available_bets ?? [])
+    .map((b) => [b.player, b.nationality]),
 );
 
 // English nationality for a player (for getTeamInfo / TeamCrest, which key off
@@ -71,8 +77,13 @@ function isGroupMarket(market) {
   return market.key === "top_scoring_group" || market.key === "most_carded_group";
 }
 
-function isTopScorerMarket(market) {
-  return market.key === "top_scorer";
+// Markets where a single person is bet on. They all share one code path: the
+// player-crest hero/row, "Velg spiller" / "Søk etter spiller…" copy, and the
+// "Avgjøres etter finalen." locked note.
+const PLAYER_MARKET_KEYS = new Set(["top_scorer", "golden_ball", "golden_glove"]);
+
+function isPlayerMarket(market) {
+  return PLAYER_MARKET_KEYS.has(market.key);
 }
 
 function ChosenHero({ outcome, statusLabel = "Ditt valg", dim = false }) {
@@ -314,10 +325,10 @@ export function SpecialResultCard({
     : [];
 
   const isGroup = isGroupMarket(market);
-  const isTopScorer = isTopScorerMarket(market);
+  const isPlayer = isPlayerMarket(market);
   const HeroComp = isGroup
     ? GroupChosenHero
-    : isTopScorer
+    : isPlayer
     ? PlayerChosenHero
     : ChosenHero;
 
@@ -390,15 +401,15 @@ function MarketSection({ market, markets, picks, pickSpecial, msLeft }) {
   const pickedOutcome = market.outcomes.find((o) => o.id === pickedId) ?? null;
 
   const isGroup = isGroupMarket(market);
-  const isTopScorer = isTopScorerMarket(market);
+  const isPlayer = isPlayerMarket(market);
   const HeroComp = isGroup
     ? GroupChosenHero
-    : isTopScorer
+    : isPlayer
     ? PlayerChosenHero
     : ChosenHero;
   const RowComp = isGroup
     ? GroupOutcomeRow
-    : isTopScorer
+    : isPlayer
     ? PlayerOutcomeRow
     : OutcomeRow;
 
@@ -410,14 +421,14 @@ function MarketSection({ market, markets, picks, pickSpecial, msLeft }) {
 
   const actionLabel = isGroup
     ? "Velg gruppe"
-    : isTopScorer
+    : isPlayer
     ? "Velg spiller"
     : "Velg lag";
   const emptyCallToAction = isGroup
     ? "Velg en gruppe →"
     : `Velg din ${market.title.toLowerCase()} →`;
-  const searchPlaceholder = isTopScorer ? "Søk etter spiller…" : "Søk etter lag…";
-  const noMatchesNote = isTopScorer ? "Fant ingen spillere." : "Fant ingen lag.";
+  const searchPlaceholder = isPlayer ? "Søk etter spiller…" : "Søk etter lag…";
+  const noMatchesNote = isPlayer ? "Fant ingen spillere." : "Fant ingen lag.";
 
   return (
     <div className={`match special-bet${expanded ? " special-bet--open" : ""}`}>
