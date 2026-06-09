@@ -5,7 +5,8 @@ import { useSpecials } from "../context/SpecialsContext";
 import Matches from "./Matches";
 import PlayedMatches from "./PlayedMatches";
 import Specials from "./Specials";
-import { isMatchHidden, isMatchWarning } from "../data/matchUtils";
+import AutofillModal from "../components/AutofillModal";
+import { isMatchHidden, isMatchWarning, isMatchLocked } from "../data/matchUtils";
 import { isSpecialLocked } from "../data/specials";
 import {
   boostedPoints,
@@ -97,11 +98,13 @@ function BonusTracker({ predictions }) {
 }
 
 export default function Tipping({ onPick }) {
-  const { predictions } = usePredictions();
+  const { predictions, predict } = usePredictions();
   const { matches, loading } = useMatches();
   const { markets, picks } = useSpecials();
   const [sub, setSub] = useState("kommende");
   const didInit = useRef(false);
+  const [showAutofillModal, setShowAutofillModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // The tab badges below are time-sensitive (a match entering its countdown
   // window, a special locking), so keep them fresh with the same 30s cadence as
@@ -124,6 +127,29 @@ export default function Tipping({ onPick }) {
   const missingUpcoming = matches.filter(
     (m) => isMatchWarning(m) && !predictions[m.id],
   ).length;
+
+  const unfilled = matches.filter((m) => !isMatchLocked(m) && !predictions[m.id]);
+
+  function showToast(msg) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  }
+
+  async function handleAutofill() {
+    setShowAutofillModal(false);
+    const outcomes = ["home", "draw", "away"];
+    let failed = false;
+    for (const m of unfilled) {
+      const outcome = outcomes[Math.floor(Math.random() * 3)];
+      const err = await predict(m.id, outcome);
+      if (err) failed = true;
+    }
+    if (failed) {
+      showToast("Noen tips kunne ikke lagres – prøv igjen");
+    } else {
+      showToast(`${unfilled.length} tips ble fylt inn`);
+    }
+  }
 
   // Default to "Kommende"; once matches finish loading, fall back to "Spilte"
   // only if there are no upcoming matches left. Runs once so it never overrides
@@ -180,12 +206,34 @@ export default function Tipping({ onPick }) {
         </button>
       </div>
 
+      {sub === "kommende" && unfilled.length > 0 && (
+        <div className="btn-autofill-row">
+          <button
+            className="btn-autofill"
+            onClick={() => setShowAutofillModal(true)}
+          >
+            Fyll inn manglende tips
+            <span className="btn-autofill-count">{unfilled.length}</span>
+          </button>
+        </div>
+      )}
+
       {sub === "kommende" && <Matches onPick={onPick} />}
       {sub === "spilte" && <PlayedMatches />}
       {sub === "spesialer" && <Specials />}
 
       {sub === "kommende" && <Coupon predictions={predictions} />}
       {sub === "spilte" && <BonusTracker predictions={predictions} />}
+
+      {showAutofillModal && (
+        <AutofillModal
+          count={unfilled.length}
+          onConfirm={handleAutofill}
+          onCancel={() => setShowAutofillModal(false)}
+        />
+      )}
+
+      <div className={`toast${toastMessage ? " show" : ""}`}>{toastMessage}</div>
     </div>
   );
 }

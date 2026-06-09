@@ -150,6 +150,24 @@ button { font-family: var(--ff-body); cursor: pointer; }
   background: var(--accent); color: #fff;
   font-size: 10px; font-weight: 800; letter-spacing: 0; line-height: 1;
 }
+/* Autofill button — standalone strip between subtabs and match list. */
+.btn-autofill-row { display: flex; justify-content: center; margin: 8px 0 2px; }
+.btn-autofill {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: none; border: 1.5px dashed var(--line-2); border-radius: 10px;
+  padding: 11px 16px;
+  font-weight: 700; font-size: 13px; letter-spacing: 0.3px; color: var(--ink-2);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.btn-autofill:hover { border-color: var(--ink-2); color: var(--ink); background: var(--accent-soft); }
+.btn-autofill-count {
+  display: inline-grid; place-items: center;
+  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
+  background: var(--line-2); color: var(--ink-2);
+  font-size: 11px; font-weight: 800; letter-spacing: 0; line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-autofill:hover .btn-autofill-count { background: var(--ink-2); color: var(--paper); }
 
 /* ---- Section heading ---- */
 .section-head { display: flex; align-items: flex-end; gap: 12px; margin: 26px 0 16px; min-height: 30px; }
