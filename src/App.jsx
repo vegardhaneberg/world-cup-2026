@@ -16,6 +16,7 @@ import { MatchProvider } from "./context/MatchContext";
 import { SpecialsProvider } from "./context/SpecialsContext";
 import Login from "./pages/Login";
 import Tipping from "./pages/Tipping";
+import ProfileModal from "./components/ProfileModal";
 import Ligaer from "./pages/Ligaer";
 import Rules from "./pages/Rules";
 import JoinPage from "./pages/JoinPage";
@@ -121,6 +122,13 @@ function MainView() {
     ? searchParams.get("tab")
     : "tip";
   const [tab, setTab] = useState(initialTab);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  function showToast(msg) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2500);
+  }
 
   const fullName = user?.user_metadata?.full_name ?? user?.email ?? "Deg";
   const firstName = fullName.split(" ")[0];
@@ -146,7 +154,7 @@ function MainView() {
             </div>
           </div>
         </div>
-        <div className="user-chip">
+        <div className="user-chip" onClick={() => setShowProfileModal(true)}>
           <span className="nm">{firstName}</span>
           <span className="av">{initial}</span>
         </div>
@@ -182,6 +190,14 @@ function MainView() {
       {tab === "tip" && <Tipping onPick={predict} />}
       {tab === "ligaer" && <Ligaer />}
       {tab === "regler" && <Rules />}
+
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        showToast={showToast}
+      />
+
+      <div className={`toast${toastMessage ? " show" : ""}`}>{toastMessage}</div>
     </div>
   );
 }
