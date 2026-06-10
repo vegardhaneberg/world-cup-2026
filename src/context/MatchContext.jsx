@@ -53,7 +53,13 @@ export function MatchProvider({ children }) {
 
   async function fetchData() {
     const [matchesResult, oddsResult] = await Promise.all([
-      supabase.from('matches').select('*').order('utc_date', { ascending: true }),
+      // Deterministic tiebreak for simultaneous kickoffs: venue alphabetical
+      // (nulls last), then id (unique PK). Prevents matches re-ordering in the
+      // UI when a sync upsert changes the physical row order. Keep all keys.
+      supabase.from('matches').select('*')
+        .order('utc_date', { ascending: true })
+        .order('venue', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: true }),
       supabase.from('odds').select('*'),
     ])
 
