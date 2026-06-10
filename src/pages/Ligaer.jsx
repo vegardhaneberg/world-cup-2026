@@ -129,6 +129,7 @@ export default function Ligaer() {
         specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
       ),
       playedCount: playedMatches.length,
+      totalPlayers: profilesRes.data.length,
       predictions: predsRes.data,
       specialPredictions: specials.specialPredictions,
     })
@@ -271,6 +272,16 @@ export default function Ligaer() {
             <div className="lb-loading">Laster…</div>
           ) : overallData ? (
             <>
+              <div className="league-head">
+                <div className="league-head-titles">
+                  <span className="league-head-name">Topp 20</span>
+                  <span className="league-head-sub">
+                    {overallData.totalPlayers === 1
+                      ? 'av totalt 1 registrert spiller'
+                      : `av totalt ${overallData.totalPlayers} registrerte spillere`}
+                  </span>
+                </div>
+              </div>
               {overallData.rows.length === 0 ? (
                 <p className="lb-empty-note">Ingen spillere ennå.</p>
               ) : (

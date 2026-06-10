@@ -663,9 +663,15 @@ button { font-family: var(--ff-body); cursor: pointer; }
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 4px;
 }
+.league-head-titles {
+  display: flex; flex-direction: column;
+}
 .league-head-name {
   font-family: var(--ff-display); font-size: 16px; text-transform: uppercase;
   letter-spacing: 0.4px; color: var(--ink-2);
+}
+.league-head-sub {
+  font-size: 10.5px; font-weight: 600; color: var(--ink-2); margin-top: 1px;
 }
 .btn-gear {
   background: none; border: none; padding: 4px; color: var(--ink-2);
