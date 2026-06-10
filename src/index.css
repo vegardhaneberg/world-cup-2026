@@ -427,6 +427,15 @@ button { font-family: var(--ff-body); cursor: pointer; }
 }
 .lb-row.me .rk { color: var(--accent); }
 .lb-row.me .score { color: var(--accent); }
+
+/* Podium tier */
+.lb-row--rank-1 .rk { color: #d4a017; }
+.lb-row--rank-2 .rk { color: #8a9bb0; }
+.lb-row--rank-3 .rk { color: #a0785a; }
+
+/* Zone dividers between podium→good and good→bottom */
+.lb-zone-divider { border-top: 2px solid var(--line); }
+
 .you-tag {
   font-size: 9px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
   color: var(--accent); margin-left: 8px; vertical-align: middle;
@@ -723,12 +732,6 @@ button { font-family: var(--ff-body); cursor: pointer; }
 }
 
 /* ---- Overall leaderboard ellipsis ---- */
-.lb-ellipsis {
-  text-align: center; padding: 6px 0;
-  font-size: 16px; color: var(--ink-2); letter-spacing: 2px;
-  border-bottom: 1px solid var(--line);
-}
-
 /* ---- Shared button ---- */
 .btn-accent {
   background: var(--accent); color: #fff; border: none; border-radius: 6px;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useMatches } from '../context/MatchContext'
 import { supabase } from '../lib/supabase'
@@ -120,12 +120,10 @@ export default function Ligaer() {
       ...predsRes.data.map(p => p.user_id),
       ...specials.specialPredictions.map(p => p.user_id),
     ])
-    const filteredProfiles = profilesRes.data.filter(p => usersWithPicks.has(p.user_id))
-
     const playedMatches = matches.filter(m => m.result !== null)
     setOverallData({
       rows: computeLeaderboard(
-        filteredProfiles, predsRes.data, playedMatches,
+        profilesRes.data, predsRes.data, playedMatches,
         specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
       ),
       playedCount: playedMatches.length,
@@ -274,11 +272,9 @@ export default function Ligaer() {
             <>
               <div className="league-head">
                 <div className="league-head-titles">
-                  <span className="league-head-name">Topp 20</span>
+                  <span className="league-head-name">Alle spillere</span>
                   <span className="league-head-sub">
-                    {overallData.totalPlayers === 1
-                      ? 'av totalt 1 registrert spiller'
-                      : `av totalt ${overallData.totalPlayers} registrerte spillere`}
+                    {`Totalt ${overallData.rows.length} spillere`}
                   </span>
                 </div>
               </div>
@@ -286,58 +282,38 @@ export default function Ligaer() {
                 <p className="lb-empty-note">Ingen spillere ennå.</p>
               ) : (
                 <div className="lb-list">
-                  {overallData.rows.slice(0, 20).map((row, i) => {
+                  {overallData.rows.map((row, i) => {
                     const isMe = row.userId === user?.id
+                    const rank = i + 1
+                    let tierClass = ''
+                    if (rank === 1) tierClass = ' lb-row--rank-1'
+                    else if (rank === 2) tierClass = ' lb-row--rank-2'
+                    else if (rank === 3) tierClass = ' lb-row--rank-3'
                     return (
-                      <div
-                        key={row.userId}
-                        className={`lb-row${isMe ? ' me' : ''}`}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openUser(row, overallData.predictions, overallData.specialPredictions)}
-                        onKeyDown={e => rowKeyDown(e, row, overallData.predictions, overallData.specialPredictions)}
-                      >
-                        <span className="rk">{i + 1}</span>
-                        <div className="who">
-                          <div className="nm">
-                            {row.name}
-                            {isMe && <span className="you-tag">Deg</span>}
-                          </div>
-                          <div className="st">{row.correct} av {overallData.playedCount} rette</div>
-                        </div>
-                        <span className="trend fl">–</span>
-                        <span className="score">{row.score}</span>
-                      </div>
-                    )
-                  })}
-                  {(() => {
-                    const myIndex = overallData.rows.findIndex(r => r.userId === user?.id)
-                    if (myIndex < 20) return null
-                    const myRow = overallData.rows[myIndex]
-                    return (
-                      <>
-                        <div className="lb-ellipsis">…</div>
+                      <Fragment key={row.userId}>
+                        {rank === 4 && <div className="lb-zone-divider" />}
+                        {rank === 11 && <div className="lb-zone-divider" />}
                         <div
-                          className="lb-row me"
+                          className={`lb-row${isMe ? ' me' : ''}${tierClass}`}
                           role="button"
                           tabIndex={0}
-                          onClick={() => openUser(myRow, overallData.predictions, overallData.specialPredictions)}
-                          onKeyDown={e => rowKeyDown(e, myRow, overallData.predictions, overallData.specialPredictions)}
+                          onClick={() => openUser(row, overallData.predictions, overallData.specialPredictions)}
+                          onKeyDown={e => rowKeyDown(e, row, overallData.predictions, overallData.specialPredictions)}
                         >
-                          <span className="rk">{myIndex + 1}</span>
+                          <span className="rk">{rank}</span>
                           <div className="who">
                             <div className="nm">
-                              {myRow.name}
-                              <span className="you-tag">Deg</span>
+                              {row.name}
+                              {isMe && <span className="you-tag">Deg</span>}
                             </div>
-                            <div className="st">{myRow.correct} av {overallData.playedCount} rette</div>
+                            <div className="st">{row.correct} av {overallData.playedCount} rette</div>
                           </div>
                           <span className="trend fl">–</span>
-                          <span className="score">{myRow.score}</span>
+                          <span className="score">{row.score}</span>
                         </div>
-                      </>
+                      </Fragment>
                     )
-                  })()}
+                  })}
                 </div>
               )}
               {overallData.playedCount === 0 && (
