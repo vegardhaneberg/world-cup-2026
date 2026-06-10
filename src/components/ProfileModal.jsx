@@ -1,11 +1,11 @@
 import { useAuth } from "../context/AuthContext";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
-import { isMatchLocked } from "../data/matchUtils";
+import { isMatchLocked, isMatchHidden, getMatchPeriod } from "../data/matchUtils";
 
 export default function ProfileModal({ isOpen, onClose, showToast }) {
   const { user } = useAuth();
-  const { predictions, predict } = usePredictions();
+  const { predictions, predict, boosts } = usePredictions();
   const { matches } = useMatches();
 
   if (!isOpen) return null;
@@ -14,6 +14,11 @@ export default function ProfileModal({ isOpen, onClose, showToast }) {
   const firstName = fullName.split(" ")[0];
 
   const unfilled = matches.filter((m) => !isMatchLocked(m) && !predictions[m.id]);
+
+  const visibleMatches = matches.filter((m) => !isMatchHidden(m));
+  const sorted = [...(visibleMatches.length ? visibleMatches : matches.filter((m) => m.date > Date.now()))].sort((a, b) => a.date - b.date);
+  const currentPeriod = sorted.length ? getMatchPeriod(sorted[0]) : null;
+  const boosterUsed = currentPeriod ? Object.values(boosts).includes(currentPeriod.key) : false;
 
   async function handleAutofill() {
     const outcomes = ["home", "draw", "away"];
@@ -44,6 +49,15 @@ export default function ProfileModal({ isOpen, onClose, showToast }) {
           </button>
         </div>
         <div className="modal-body">
+          {currentPeriod && (
+            <>
+              <div className="booster-status">
+                <span>⚡ {currentPeriod.label}</span>
+                <span>{boosterUsed ? "· Brukt ✓" : "· Ikke brukt"}</span>
+              </div>
+              <hr className="modal-divider" />
+            </>
+          )}
           {unfilled.length > 0 ? (
             <>
               <p>Du har {unfilled.length} kamper uten tips</p>

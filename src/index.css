@@ -753,6 +753,17 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .modal-close:hover { color: var(--ink); }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
 
+.booster-status {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fef9ec; border: 1px solid #f0d080; border-radius: var(--r);
+  padding: 12px 14px; color: var(--boost); font-weight: 600; font-size: 14px;
+}
+
+.modal-divider {
+  border: none; border-top: 1px solid var(--border, #e8e8e8);
+  margin: 4px 0;
+}
+
 .all-tipped {
   display: flex; align-items: center; gap: 10px;
   background: #eaf4ee; border: 1px solid #b4dcc0; border-radius: var(--r);
