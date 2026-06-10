@@ -1,0 +1,15 @@
+{
+  "name": "VMBongen 2026",
+  "short_name": "VMBongen",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#f4efe5",
+  "theme_color": "#c4492f",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
