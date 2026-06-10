@@ -89,7 +89,9 @@ export function PredictionProvider({ children }) {
       if (isToggle && previousBoost !== undefined) {
         setBoosts(prev => ({ ...prev, [matchId]: previousBoost }))
       }
+      return error
     }
+    return null
   }
 
   // Set / move / remove the one boost in a match's period. A pick is required.

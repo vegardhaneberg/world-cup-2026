@@ -102,7 +102,7 @@ button { font-family: var(--ff-body); cursor: pointer; }
   font-size: 9.5px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
   color: var(--ink-2); margin-top: 4px;
 }
-.user-chip { display: flex; align-items: center; gap: 8px; }
+.user-chip { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .user-chip .nm { font-weight: 700; font-size: 13px; color: var(--ink-2); }
 .user-chip .av {
   width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--paper);
@@ -752,6 +752,17 @@ button { font-family: var(--ff-body); cursor: pointer; }
 }
 .modal-close:hover { color: var(--ink); }
 .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+.all-tipped {
+  display: flex; align-items: center; gap: 10px;
+  background: #eaf4ee; border: 1px solid #b4dcc0; border-radius: var(--r);
+  padding: 12px 14px; color: #2e7d4f; font-weight: 600; font-size: 14px;
+}
+.all-tipped__icon {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: #2e7d4f; color: #fff;
+  display: grid; place-items: center; font-size: 13px; font-weight: 700;
+}
 
 /* Tall modal that scrolls its body (e.g. a user's full prediction list).
    Fixed height keeps the modal the same size across tab switches. */

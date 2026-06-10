@@ -186,6 +186,7 @@ export default function Tipping({ onPick }) {
 
       {sub === "kommende" && <Coupon predictions={predictions} />}
       {sub === "spilte" && <BonusTracker predictions={predictions} />}
+
     </div>
   );
 }
