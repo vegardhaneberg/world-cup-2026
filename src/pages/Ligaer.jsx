@@ -35,7 +35,7 @@ export default function Ligaer() {
     if (!user) return
     const { data, error } = await supabase
       .from('league_members')
-      .select('league_id, leagues(id, name, invite_token, created_by)')
+      .select('league_id, leagues(id, name, invite_token, created_by, house_rules)')
       .eq('user_id', user.id)
 
     if (error) { setFetchError('Kunne ikke laste ligaer.'); return }
@@ -356,6 +356,13 @@ export default function Ligaer() {
                   <GearIcon />
                 </button>
               )}
+            </div>
+          )}
+
+          {selectedLeague?.house_rules?.trim() && (
+            <div className="house-rules-card">
+              <span className="house-rules-label">Husregler</span>
+              <p className="house-rules-text">{selectedLeague.house_rules}</p>
             </div>
           )}
 

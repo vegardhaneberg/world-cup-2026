@@ -9,11 +9,18 @@ export default function LeagueSettingsModal({
   onMemberRemoved,
 }) {
   const [name, setName] = useState(league.name);
+  const [houseRules, setHouseRules] = useState(league.house_rules ?? "");
   const [saving, setSaving] = useState(false);
+  const [savingRules, setSavingRules] = useState(false);
   const [copied, setCopied] = useState(false);
   const [removingId, setRemovingId] = useState(null);
 
   const inviteLink = `${window.location.origin}/join/${league.invite_token}`;
+
+  // Empty save clears the rules (writes null). Save is enabled whenever the
+  // trimmed value differs from what's stored — including text → empty.
+  const storedRules = league.house_rules ?? "";
+  const rulesChanged = houseRules.trim() !== storedRules;
 
   async function saveName() {
     if (!name.trim() || name.trim() === league.name) return;
@@ -24,6 +31,18 @@ export default function LeagueSettingsModal({
       .eq("id", league.id);
     if (!error) onLeagueUpdated({ ...league, name: name.trim() });
     setSaving(false);
+  }
+
+  async function saveHouseRules() {
+    if (!rulesChanged) return;
+    setSavingRules(true);
+    const trimmed = houseRules.trim();
+    const { error } = await supabase
+      .from("leagues")
+      .update({ house_rules: trimmed || null })
+      .eq("id", league.id);
+    if (!error) onLeagueUpdated({ ...league, house_rules: trimmed || null });
+    setSavingRules(false);
   }
 
   function copyLink() {
@@ -72,6 +91,29 @@ export default function LeagueSettingsModal({
               disabled={saving || !name.trim() || name.trim() === league.name}
             >
               {saving ? "…" : "Lagre"}
+            </button>
+          </div>
+
+          <label className="field-label" style={{ marginTop: 20 }}>
+            Husregler
+          </label>
+          <textarea
+            className="field-input field-textarea"
+            value={houseRules}
+            onChange={(e) => setHouseRules(e.target.value)}
+            maxLength={500}
+            rows={4}
+            placeholder="F.eks. Alle betaler vinneren 100 kr på slutten av turneringen."
+          />
+          <div className="field-textarea-footer">
+            <span className="char-counter">{houseRules.length}/500</span>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={saveHouseRules}
+              disabled={savingRules || !rulesChanged}
+            >
+              {savingRules ? "…" : "Lagre"}
             </button>
           </div>
 
