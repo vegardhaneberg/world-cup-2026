@@ -111,6 +111,11 @@ export default function Rules() {
               Verdensmester avgjøres etter finalen, og poengene legges til
               totalsummen din.
             </li>
+            <li>
+              <strong>Kort:</strong> 1 gult kort gir 1 poeng. Andre gule (som
+              fører til rødt) gir 1 poeng — men det røde kortet gir 0 poeng.
+              Direkte rødt kort gir 1 poeng.
+            </li>
           </ul>
         </section>
 
