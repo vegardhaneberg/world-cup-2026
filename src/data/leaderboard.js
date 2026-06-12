@@ -1,5 +1,5 @@
-import { boostedPoints, groupBonus, isGroupStageMatch } from './scoring'
-import { specialPoints } from './specials'
+import { boostedPoints, groupBonus, isGroupStageMatch } from './scoring.js'
+import { specialPoints } from './specials.js'
 
 // Builds the ranked table. Match predictions drive the "X av Y rette" stats;
 // settled special markets (e.g. Verdensmester) only fold into the total score.

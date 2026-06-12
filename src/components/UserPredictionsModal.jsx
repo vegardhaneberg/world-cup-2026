@@ -100,7 +100,7 @@ function PredictionCard({ match, prediction }) {
   )
 }
 
-export default function UserPredictionsModal({ user, byMatch, bySpecial = {}, matches, onClose }) {
+export default function UserPredictionsModal({ user, byMatch, bySpecial = {}, matches, onClose, loading = false }) {
   const [sub, setSub] = useState('kamper')
   const { markets, loading: specialsLoading } = useSpecials()
 
@@ -141,39 +141,45 @@ export default function UserPredictionsModal({ user, byMatch, bySpecial = {}, ma
         </div>
 
         <div className="modal-body">
-          {sub === 'kamper' && (
-            grouped.length === 0 ? (
-              <p className="lb-empty-note">Ingen kamper er låst ennå.</p>
-            ) : (
-              grouped.map(([date, dayMatches]) => (
-                <div key={date}>
-                  <div className="day-head">{formatDateHeading(date)}</div>
-                  {dayMatches.map(m => (
-                    <PredictionCard key={m.id} match={m} prediction={byMatch[m.id]} />
-                  ))}
-                </div>
-              ))
-            )
-          )}
+          {loading ? (
+            <div className="lb-loading">Laster…</div>
+          ) : (
+            <>
+              {sub === 'kamper' && (
+                grouped.length === 0 ? (
+                  <p className="lb-empty-note">Ingen kamper er låst ennå.</p>
+                ) : (
+                  grouped.map(([date, dayMatches]) => (
+                    <div key={date}>
+                      <div className="day-head">{formatDateHeading(date)}</div>
+                      {dayMatches.map(m => (
+                        <PredictionCard key={m.id} match={m} prediction={byMatch[m.id]} />
+                      ))}
+                    </div>
+                  ))
+                )
+              )}
 
-          {sub === 'spesialer' && (
-            specialsLoading ? (
-              <div className="lb-loading">Laster…</div>
-            ) : lockedMarkets.length === 0 ? (
-              <p className="lb-empty-note">Ingen spesialer er låst ennå.</p>
-            ) : (
-              <div className="upred-specials">
-                {lockedMarkets.map(market => (
-                  <SpecialResultCard
-                    key={market.id}
-                    market={market}
-                    pickedId={bySpecial[market.id]}
-                    statusLabel="Valg"
-                    noPickMessage="Ikke tippet"
-                  />
-                ))}
-              </div>
-            )
+              {sub === 'spesialer' && (
+                specialsLoading ? (
+                  <div className="lb-loading">Laster…</div>
+                ) : lockedMarkets.length === 0 ? (
+                  <p className="lb-empty-note">Ingen spesialer er låst ennå.</p>
+                ) : (
+                  <div className="upred-specials">
+                    {lockedMarkets.map(market => (
+                      <SpecialResultCard
+                        key={market.id}
+                        market={market}
+                        pickedId={bySpecial[market.id]}
+                        statusLabel="Valg"
+                        noPickMessage="Ikke tippet"
+                      />
+                    ))}
+                  </div>
+                )
+              )}
+            </>
           )}
         </div>
       </div>

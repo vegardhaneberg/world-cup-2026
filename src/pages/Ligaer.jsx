@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 import CreateLeagueModal from '../components/CreateLeagueModal'
 import LeagueSettingsModal from '../components/LeagueSettingsModal'
 import UserPredictionsModal from '../components/UserPredictionsModal'
-import { computeLeaderboard } from '../data/leaderboard'
 
 function GearIcon() {
   return (
@@ -14,6 +13,16 @@ function GearIcon() {
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
     </svg>
   )
+}
+
+function cacheRowToLeaderboardRow(r) {
+  return {
+    userId: r.user_id,
+    name: r.name,
+    score: r.score,
+    correct: r.correct,
+    played: r.played,
+  }
 }
 
 export default function Ligaer() {
@@ -44,26 +53,22 @@ export default function Ligaer() {
     setLeagues(list)
   }
 
-  // Special picks + settled markets feed the leaderboard alongside match
-  // predictions. Markets/outcomes are global; pass memberIds to scope picks
-  // to a league, or null for the overall table.
-  async function fetchSpecialsData(memberIds) {
-    let predQuery = supabase
-      .from('special_predictions')
-      .select('user_id, market_id, outcome_id')
-    if (memberIds) predQuery = predQuery.in('user_id', memberIds)
+  async function fetchOverallData() {
+    setLoadingOverall(true)
+    const { data, error } = await supabase
+      .from('leaderboard_cache')
+      .select('user_id, name, score, correct, played')
+      .order('score', { ascending: false })
+      .order('correct', { ascending: false })
 
-    const [predsRes, marketsRes, outcomesRes] = await Promise.all([
-      predQuery,
-      supabase.from('special_markets').select('id, result_outcome_ids').not('result_outcome_ids', 'eq', '{}'),
-      supabase.from('special_outcomes').select('id, market_id, odds, frozen_odds'),
-    ])
+    if (error) { setLoadingOverall(false); return }
 
-    return {
-      specialPredictions: predsRes.data ?? [],
-      settledMarkets: marketsRes.data ?? [],
-      specialOutcomes: outcomesRes.data ?? [],
-    }
+    const rows = (data ?? []).map(cacheRowToLeaderboardRow)
+    setOverallData({
+      rows,
+      playedCount: rows[0]?.played ?? 0,
+    })
+    setLoadingOverall(false)
   }
 
   async function fetchLeagueData(leagueId) {
@@ -77,61 +82,29 @@ export default function Ligaer() {
 
     const memberIds = members.map(m => m.user_id)
     if (memberIds.length === 0) {
-      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [], predictions: [], specialPredictions: [] } }))
+      setLeagueData(prev => ({ ...prev, [leagueId]: { rows: [], profiles: [] } }))
       setLoadingLeague(false)
       return
     }
 
-    const [profilesRes, predsRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, full_name, email').in('user_id', memberIds),
-      supabase.from('predictions').select('user_id, match_id, outcome, boosted').in('user_id', memberIds),
-    ])
+    const { data, error } = await supabase
+      .from('leaderboard_cache')
+      .select('user_id, name, score, correct, played')
+      .in('user_id', memberIds)
+      .order('score', { ascending: false })
+      .order('correct', { ascending: false })
 
-    if (profilesRes.error || predsRes.error) { setLoadingLeague(false); return }
+    if (error) { setLoadingLeague(false); return }
 
-    const specials = await fetchSpecialsData(memberIds)
-    const playedMatches = matches.filter(m => m.result !== null)
+    const rows = (data ?? []).map(cacheRowToLeaderboardRow)
     setLeagueData(prev => ({
       ...prev,
       [leagueId]: {
-        rows: computeLeaderboard(
-          profilesRes.data, predsRes.data, playedMatches,
-          specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
-        ),
-        profiles: profilesRes.data,
-        predictions: predsRes.data,
-        specialPredictions: specials.specialPredictions,
+        rows,
+        profiles: rows.map(r => ({ user_id: r.userId, full_name: r.name })),
       }
     }))
     setLoadingLeague(false)
-  }
-
-  async function fetchOverallData() {
-    setLoadingOverall(true)
-    const [profilesRes, predsRes] = await Promise.all([
-      supabase.from('profiles').select('user_id, full_name, email'),
-      supabase.from('predictions').select('user_id, match_id, outcome, boosted'),
-    ])
-
-    if (profilesRes.error || predsRes.error) { setLoadingOverall(false); return }
-
-    const specials = await fetchSpecialsData(null)
-    const usersWithPicks = new Set([
-      ...predsRes.data.map(p => p.user_id),
-      ...specials.specialPredictions.map(p => p.user_id),
-    ])
-    const playedMatches = matches.filter(m => m.result !== null)
-    setOverallData({
-      rows: computeLeaderboard(
-        profilesRes.data, predsRes.data, playedMatches,
-        specials.specialPredictions, specials.settledMarkets, specials.specialOutcomes,
-      ),
-      playedCount: playedMatches.length,
-      totalPlayers: profilesRes.data.length,
-      predictions: predsRes.data,
-      specialPredictions: specials.specialPredictions,
-    })
-    setLoadingOverall(false)
   }
 
   useEffect(() => {
@@ -172,7 +145,6 @@ export default function Ligaer() {
       return {
         ...prev,
         [leagueId]: {
-          ...d,
           rows: d.rows.filter(r => r.userId !== userId),
           profiles: d.profiles.filter(p => p.user_id !== userId),
         }
@@ -180,26 +152,30 @@ export default function Ligaer() {
     })
   }
 
-  function openUser(row, allPredictions, allSpecialPredictions) {
+  async function openUser(row) {
+    setSelectedUser({ row, byMatch: null, bySpecial: null, loading: true })
+
+    const [predsRes, specialsRes] = await Promise.all([
+      supabase.from('predictions').select('match_id, outcome, boosted').eq('user_id', row.userId),
+      supabase.from('special_predictions').select('market_id, outcome_id').eq('user_id', row.userId),
+    ])
+
     const byMatch = {}
-    for (const p of allPredictions ?? []) {
-      if (p.user_id === row.userId) {
-        byMatch[p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
-      }
+    for (const p of predsRes.data ?? []) {
+      byMatch[p.match_id] = { outcome: p.outcome, boosted: !!p.boosted }
     }
     const bySpecial = {}
-    for (const p of allSpecialPredictions ?? []) {
-      if (p.user_id === row.userId) {
-        bySpecial[p.market_id] = p.outcome_id
-      }
+    for (const p of specialsRes.data ?? []) {
+      bySpecial[p.market_id] = p.outcome_id
     }
-    setSelectedUser({ row, byMatch, bySpecial })
+
+    setSelectedUser({ row, byMatch, bySpecial, loading: false })
   }
 
-  function rowKeyDown(e, row, allPredictions, allSpecialPredictions) {
+  function rowKeyDown(e, row) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      openUser(row, allPredictions, allSpecialPredictions)
+      openUser(row)
     }
   }
 
@@ -297,8 +273,8 @@ export default function Ligaer() {
                           className={`lb-row${isMe ? ' me' : ''}${tierClass}`}
                           role="button"
                           tabIndex={0}
-                          onClick={() => openUser(row, overallData.predictions, overallData.specialPredictions)}
-                          onKeyDown={e => rowKeyDown(e, row, overallData.predictions, overallData.specialPredictions)}
+                          onClick={() => openUser(row)}
+                          onKeyDown={e => rowKeyDown(e, row)}
                         >
                           <span className="rk">{rank}</span>
                           <div className="who">
@@ -358,8 +334,8 @@ export default function Ligaer() {
                         className={`lb-row${isMe ? ' me' : ''}`}
                         role="button"
                         tabIndex={0}
-                        onClick={() => openUser(row, current.predictions, current.specialPredictions)}
-                        onKeyDown={e => rowKeyDown(e, row, current.predictions, current.specialPredictions)}
+                        onClick={() => openUser(row)}
+                        onKeyDown={e => rowKeyDown(e, row)}
                       >
                         <span className="rk">{i + 1}</span>
                         <div className="who">
@@ -401,10 +377,11 @@ export default function Ligaer() {
       {selectedUser && (
         <UserPredictionsModal
           user={selectedUser.row}
-          byMatch={selectedUser.byMatch}
-          bySpecial={selectedUser.bySpecial}
+          byMatch={selectedUser.byMatch ?? {}}
+          bySpecial={selectedUser.bySpecial ?? {}}
           matches={matches}
           onClose={() => setSelectedUser(null)}
+          loading={selectedUser.loading}
         />
       )}
     </div>
