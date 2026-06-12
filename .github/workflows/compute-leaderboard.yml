@@ -1,0 +1,26 @@
+name: Compute Leaderboard
+
+on:
+  workflow_call: {}
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * *' # Daily safety-net at 03:00 UTC
+
+jobs:
+  compute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute and cache leaderboard scores
+        run: node scripts/compute-leaderboard.js
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
