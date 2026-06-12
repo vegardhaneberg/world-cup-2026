@@ -3,8 +3,6 @@ name: Compute Leaderboard
 on:
   workflow_call: {}
   workflow_dispatch: {}
-  schedule:
-    - cron: '0 3 * * *' # Daily safety-net at 03:00 UTC
 
 jobs:
   compute:
@@ -14,8 +12,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci

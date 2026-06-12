@@ -1,17 +1,17 @@
-import postgres from 'postgres'
-import { computeLeaderboard } from '../src/data/leaderboard.js'
-import { getMatchPoints } from '../src/data/scoring.js'
+import postgres from "postgres";
+import { computeLeaderboard } from "../src/data/leaderboard.js";
+import { getMatchPoints } from "../src/data/scoring.js";
 
-const { DATABASE_URL } = process.env
+const { DATABASE_URL } = process.env;
 if (!DATABASE_URL) {
-  console.error('ERROR: Missing DATABASE_URL')
-  process.exit(1)
+  console.error("ERROR: Missing DATABASE_URL");
+  process.exit(1);
 }
 
-const sql = postgres(DATABASE_URL, { ssl: 'require' })
+const sql = postgres(DATABASE_URL, { ssl: "require" });
 
 async function main() {
-  console.log('Fetching data from database…')
+  console.log("Fetching data from database…");
 
   const [
     profiles,
@@ -29,14 +29,14 @@ async function main() {
     sql`SELECT user_id, market_id, outcome_id FROM special_predictions`,
     sql`SELECT id, result_outcome_ids FROM special_markets WHERE result_outcome_ids <> '{}'`,
     sql`SELECT id, market_id, odds, frozen_odds FROM special_outcomes`,
-  ])
+  ]);
 
-  const oddsMap = new Map(oddsRows.map(o => [o.match_id, o]))
+  const oddsMap = new Map(oddsRows.map((o) => [o.match_id, o]));
 
   // Transform raw match rows into the shape computeLeaderboard expects,
   // mirroring MatchContext.transformMatch (without the UI-only fields).
-  const playedMatches = matchRows.map(m => {
-    const pts = getMatchPoints(null, null, oddsMap.get(m.id))
+  const playedMatches = matchRows.map((m) => {
+    const pts = getMatchPoints(null, null, oddsMap.get(m.id));
     return {
       id: m.id,
       result: m.result,
@@ -45,13 +45,13 @@ async function main() {
       pointsHome: pts.home,
       pointsDraw: pts.draw,
       pointsAway: pts.away,
-    }
-  })
+    };
+  });
 
   console.log(
     `Computing scores: ${profiles.length} players, ${playedMatches.length} played matches, ` +
-    `${specialPredictions.length} special picks, ${settledMarkets.length} settled markets…`
-  )
+      `${specialPredictions.length} special picks, ${settledMarkets.length} settled markets…`,
+  );
 
   const rows = computeLeaderboard(
     profiles,
@@ -60,17 +60,17 @@ async function main() {
     specialPredictions,
     settledMarkets,
     specialOutcomes,
-  )
+  );
 
-  const now = new Date().toISOString()
-  const upsertRows = rows.map(r => ({
+  const now = new Date().toISOString();
+  const upsertRows = rows.map((r) => ({
     user_id: r.userId,
     name: r.name,
     score: r.score,
     correct: r.correct,
     played: r.played,
     updated_at: now,
-  }))
+  }));
 
   await sql`
     INSERT INTO leaderboard_cache ${sql(upsertRows)}
@@ -80,13 +80,13 @@ async function main() {
       correct    = EXCLUDED.correct,
       played     = EXCLUDED.played,
       updated_at = EXCLUDED.updated_at
-  `
+  `;
 
-  console.log(`Done. Upserted ${rows.length} rows to leaderboard_cache.`)
-  await sql.end()
+  console.log(`Done. Upserted ${rows.length} rows to leaderboard_cache.`);
+  await sql.end();
 }
 
-main().catch(err => {
-  console.error('ERROR:', err)
-  process.exit(1)
-})
+main().catch((err) => {
+  console.error("ERROR:", err);
+  process.exit(1);
+});
