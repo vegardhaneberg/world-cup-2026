@@ -120,21 +120,6 @@ const UpcomingCard = memo(function UpcomingCard({
     }
   }
 
-  // Doubled-points hint for the active boost button
-  const boostedPts = prediction
-    ? (prediction === "home" ? match.pointsHome
-      : prediction === "draw" ? match.pointsDraw
-      : match.pointsAway)
-    : 0;
-
-  // A result can land while the match is still in the upcoming tab (it stays
-  // here until 3h after kickoff). When it does, show the score and outcome
-  // instead of the "Kampen er i gang" placeholder.
-  const hasResult = match.result != null;
-  const correct = prediction && prediction === match.result;
-  const earnedPts = correct ? boostedPts : 0;
-  const pointsEarned = isBoosted ? boostedPoints(earnedPts) : earnedPts;
-
   function boostControl() {
     if (effectiveLocked) return null;
     if (!prediction) {
@@ -199,13 +184,7 @@ const UpcomingCard = memo(function UpcomingCard({
             <div className="nm">{match.homeTeam}</div>
           </div>
         </div>
-        {hasResult ? (
-          <span className="vs result-score">
-            {match.homeScore} – {match.awayScore}
-          </span>
-        ) : (
-          <span className="vs">VS</span>
-        )}
+        <span className="vs">VS</span>
         <div className="team away">
           <TeamCrest teamName={match.awayTeam} />
           <div>
@@ -213,22 +192,7 @@ const UpcomingCard = memo(function UpcomingCard({
           </div>
         </div>
       </div>
-      {hasResult ? (
-        <div className="result-row">
-          {!prediction && (
-            <span className="result-badge pending">Ikke tippet</span>
-          )}
-          {prediction && (
-            <PickBadges prediction={prediction} state={correct ? "correct" : "wrong"} />
-          )}
-          {prediction && correct && (
-            <span className="result-badge correct">+{pointsEarned} p</span>
-          )}
-          {prediction && !correct && (
-            <span className="result-badge wrong">0 p</span>
-          )}
-        </div>
-      ) : effectiveLocked ? (
+      {effectiveLocked ? (
         <div className="result-row">
           <span className="match-live-ball" aria-hidden="true">⚽</span>
           {prediction && <PickBadges prediction={prediction} state="neutral" />}
