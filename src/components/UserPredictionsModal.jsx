@@ -30,7 +30,9 @@ function groupByLocalDate(matchList) {
     if (!map[m.localDate]) map[m.localDate] = []
     map[m.localDate].push(m)
   }
-  return Object.entries(map).sort(([a], [b]) => b.localeCompare(a))
+  return Object.entries(map)
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([date, matches]) => [date, matches.sort((a, b) => b.date.localeCompare(a.date))])
 }
 
 function PredictionCard({ match, prediction }) {
