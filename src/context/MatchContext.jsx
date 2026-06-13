@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { getMatchPoints } from '../data/scoring'
-import { isMatchHidden, getMatchPeriod } from '../data/matchUtils'
+import { isMatchHidden, getMatchPeriod, shortCityName } from '../data/matchUtils'
 
 const MatchContext = createContext(null)
 
@@ -12,7 +12,7 @@ function transformMatch(row, oddsMap) {
   // Local date in Oslo timezone (YYYY-MM-DD)
   const localDate = new Date(row.utc_date).toLocaleDateString('sv', { timeZone: 'Europe/Oslo' })
 
-  const city = row.venue ? row.venue.split('(')[0].trim().split(',')[0].trim() : ''
+  const city = row.venue ? shortCityName(row.venue.split('(')[0].trim().split(',')[0].trim()) : ''
 
   // GROUP_A → A, null for knockouts
   const group = row.group ? row.group.replace('GROUP_', '') : null

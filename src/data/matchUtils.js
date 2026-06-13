@@ -40,6 +40,15 @@ export function matchGroupLabel(match) {
   return (match.stage ?? '').replace(/_/g, ' ')
 }
 
+const SHORT_CITY_NAMES = {
+  'New York/New Jersey': 'New York',
+  'San Francisco Bay Area': 'San Francisco',
+}
+
+export function shortCityName(name) {
+  return SHORT_CITY_NAMES[name] ?? name
+}
+
 const SHORT_TEAM_NAMES = {
   'Bosnia & Herzegovina': 'Bosnia',
   'Czech Republic': 'Czechia',
