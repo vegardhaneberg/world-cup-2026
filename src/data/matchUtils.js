@@ -40,6 +40,20 @@ export function matchGroupLabel(match) {
   return (match.stage ?? '').replace(/_/g, ' ')
 }
 
+const SHORT_TEAM_NAMES = {
+  'Bosnia & Herzegovina': 'Bosnia',
+  'Czech Republic': 'Czechia',
+  'South Korea': 'S. Korea',
+  'South Africa': 'S. Africa',
+  'Saudi Arabia': 'S. Arabia',
+  'New Zealand': 'N. Zealand',
+  'Ivory Coast': "Côte d'Ivoire",
+}
+
+export function shortTeamName(name) {
+  return SHORT_TEAM_NAMES[name] ?? name
+}
+
 // Booster "period": group stage → matchday (3 periods), knockouts → stage.
 // Centralized so a stage rename is a one-line change. Returns { key, label }.
 // Accepts a raw matches row or a transformed match (needs matchday + stage).
