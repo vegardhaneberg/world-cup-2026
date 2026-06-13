@@ -179,6 +179,31 @@ button { font-family: var(--ff-body); cursor: pointer; }
 /* Specials deadline with no pick delivered yet — escalated to red. */
 .match-warning-banner--urgent { background: var(--accent); }
 
+.info-banner {
+  margin: 16px 0 8px;
+  padding: 8px 40px;
+  border-radius: 999px;
+  background: #d0ecd8;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+}
+.info-banner__close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  font-size: 20px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
 .match-top {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 16px; border-bottom: 1px solid var(--line);
@@ -781,6 +806,18 @@ button { font-family: var(--ff-body); cursor: pointer; }
   border: none; border-top: 1px solid var(--border, #e8e8e8);
   margin: 4px 0;
 }
+
+.modal-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  color: var(--ink-2); margin: 0;
+}
+
+.admin-msg-input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line-2);
+  border-radius: var(--r); background: var(--card); color: var(--ink);
+  font-family: var(--ff-body); font-size: 14px; resize: vertical;
+}
+.admin-msg-input:focus { outline: none; border-color: var(--ink); }
 
 .all-tipped {
   display: flex; align-items: center; gap: 10px;

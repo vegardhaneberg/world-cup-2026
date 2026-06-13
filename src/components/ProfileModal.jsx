@@ -1,12 +1,25 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { usePredictions } from "../context/PredictionContext";
 import { useMatches } from "../context/MatchContext";
 import { isMatchLocked, isMatchHidden, getMatchPeriod } from "../data/matchUtils";
+import { supabase } from "../lib/supabase";
 
-export default function ProfileModal({ isOpen, onClose, showToast }) {
+const ADMIN_IDS = [
+  "50313b35-75fc-4151-9b25-779044972015",
+  "2a8bd764-066e-4262-b36b-209f7c05fe20",
+];
+
+export default function ProfileModal({ isOpen, onClose, showToast, message }) {
   const { user } = useAuth();
   const { predictions, predict, boosts } = usePredictions();
   const { matches } = useMatches();
+  const isAdmin = ADMIN_IDS.includes(user?.id);
+  const [adminMsg, setAdminMsg] = useState(message ?? "");
+
+  useEffect(() => {
+    if (isOpen) setAdminMsg(message ?? "");
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -19,6 +32,21 @@ export default function ProfileModal({ isOpen, onClose, showToast }) {
   const sorted = [...(visibleMatches.length ? visibleMatches : matches.filter((m) => m.date > Date.now()))].sort((a, b) => a.date - b.date);
   const currentPeriod = sorted.length ? getMatchPeriod(sorted[0]) : null;
   const boosterUsed = currentPeriod ? Object.values(boosts).includes(currentPeriod.key) : false;
+
+  async function handlePublish() {
+    const newMessage = adminMsg.trim() || null;
+    const { error } = await supabase.from("announcement").update({
+      message: newMessage,
+      updated_at: new Date().toISOString(),
+      updated_by: user.id,
+    }).eq("id", 1);
+    if (error) {
+      showToast("Noe gikk galt – prøv igjen");
+    } else {
+      showToast(newMessage ? "Melding publisert" : "Melding fjernet");
+      onClose();
+    }
+  }
 
   async function handleAutofill() {
     const outcomes = ["home", "draw", "away"];
@@ -70,6 +98,23 @@ export default function ProfileModal({ isOpen, onClose, showToast }) {
               <span className="all-tipped__icon">✓</span>
               <span>Alle kommende kamper er tippet</span>
             </div>
+          )}
+          {isAdmin && (
+            <>
+              <hr className="modal-divider" />
+              <p className="modal-label">Infotekst til alle brukere</p>
+              <textarea
+                className="admin-msg-input"
+                value={adminMsg}
+                onChange={(e) => setAdminMsg(e.target.value)}
+                placeholder="Skriv en melding… (tom = skjult)"
+                maxLength={200}
+                rows={3}
+              />
+              <button className="btn-accent" onClick={handlePublish}>
+                Publiser melding
+              </button>
+            </>
           )}
         </div>
       </div>

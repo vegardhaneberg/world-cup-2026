@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { supabase } from "./lib/supabase";
 import {
   PredictionProvider,
   usePredictions,
@@ -124,6 +125,24 @@ function MainView() {
   const [tab, setTab] = useState(initialTab);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [dismissedMsg, setDismissedMsg] = useState(
+    () => localStorage.getItem("dismissedAnnouncement") ?? ""
+  );
+
+  useEffect(() => {
+    supabase.from("announcement").select("message").eq("id", 1).single()
+      .then(({ data }) => { if (data?.message) setAnnouncement(data.message); });
+
+    const channel = supabase
+      .channel("announcement-changes")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "announcement" }, (payload) => {
+        setAnnouncement(payload.new.message ?? "");
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   function showToast(msg) {
     setToastMessage(msg);
@@ -187,6 +206,16 @@ function MainView() {
         </button>
       </div>
 
+      {announcement && announcement !== dismissedMsg && (
+        <div className="info-banner">
+          {announcement}
+          <button className="info-banner__close" onClick={() => {
+            localStorage.setItem("dismissedAnnouncement", announcement);
+            setDismissedMsg(announcement);
+          }}>×</button>
+        </div>
+      )}
+
       {tab === "tip" && <Tipping onPick={predict} />}
       {tab === "ligaer" && <Ligaer />}
       {tab === "regler" && <Rules />}
@@ -195,6 +224,7 @@ function MainView() {
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         showToast={showToast}
+        message={announcement}
       />
 
       <div className={`toast${toastMessage ? " show" : ""}`}>{toastMessage}</div>
