@@ -218,6 +218,7 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .fixture { display: flex; align-items: center; padding: 16px 16px 6px; }
 .team { flex: 1; display: flex; align-items: center; gap: 11px; min-width: 0; }
 .team.away { flex-direction: row-reverse; text-align: right; }
+.team > div { min-width: 0; }
 .disc {
   width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
   display: grid; place-items: center;
@@ -229,7 +230,7 @@ button { font-family: var(--ff-body); cursor: pointer; }
   cursor: pointer; transition: transform 0.12s ease, opacity 0.12s ease;
 }
 .crest-link:hover { transform: scale(1.08); opacity: 0.85; }
-.team .nm { font-weight: 700; font-size: 15px; line-height: 1.1; }
+.team .nm { font-weight: 700; font-size: 15px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .team .meta { font-size: 10.5px; color: var(--ink-2); font-weight: 600; margin-top: 1px; }
 .vs { flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--ink-2); padding: 0 14px; }
 

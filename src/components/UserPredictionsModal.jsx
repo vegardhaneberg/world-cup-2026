@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { isMatchLocked, matchGroupLabel, shortTeamName } from '../data/matchUtils'
+import { isMatchLocked, matchGroupLabel } from '../data/matchUtils'
+import { getTeamInfo } from '../data/dummyData'
 import { useSpecials } from '../context/SpecialsContext'
 import { isSpecialLocked } from '../data/specials'
 import { SpecialResultCard } from '../pages/Specials'
@@ -65,7 +66,7 @@ function PredictionCard({ match, prediction }) {
         <div className="team home">
           <TeamCrest teamName={match.homeTeam} />
           <div>
-            <div className="nm">{shortTeamName(match.homeTeam)}</div>
+            <div className="nm">{getTeamInfo(match.homeTeam).code}</div>
           </div>
         </div>
         {hasResult ? (
@@ -78,7 +79,7 @@ function PredictionCard({ match, prediction }) {
         <div className="team away">
           <TeamCrest teamName={match.awayTeam} />
           <div>
-            <div className="nm">{shortTeamName(match.awayTeam)}</div>
+            <div className="nm">{getTeamInfo(match.awayTeam).code}</div>
           </div>
         </div>
       </div>
