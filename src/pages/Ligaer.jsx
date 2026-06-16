@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, Fragment } from 'react'
+import confetti from 'canvas-confetti'
 import { useAuth } from '../context/AuthContext'
 import { useMatches } from '../context/MatchContext'
 import { supabase } from '../lib/supabase'
@@ -12,6 +13,40 @@ function GearIcon() {
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
     </svg>
+  )
+}
+
+function CelebrationIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9H3.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h2.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  )
+}
+
+function CelebrationOverlay({ names, onDismiss }) {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  useEffect(() => {
+    if (!reducedMotion) {
+      confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.3 }, colors: ['#d4a017', '#c4492f', '#f4efe5', '#fff'] })
+      confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.3 }, colors: ['#d4a017', '#c4492f', '#f4efe5', '#fff'] })
+    }
+    const timer = setTimeout(onDismiss, 4000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  return (
+    <div className="celebration-overlay" onClick={onDismiss} role="dialog" aria-modal="true" aria-label="Feiring">
+      <div className={`celebration-name${reducedMotion ? ' celebration-name--no-motion' : ''}`}>
+        {names}
+      </div>
+    </div>
   )
 }
 
@@ -38,6 +73,8 @@ export default function Ligaer() {
   const [showCreate, setShowCreate] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [celebrating, setCelebrating] = useState(false)
+  const [celebrationNames, setCelebrationNames] = useState('')
   const intervalRef = useRef(null)
 
   async function fetchLeagues() {
@@ -179,6 +216,15 @@ export default function Ligaer() {
     }
   }
 
+  function celebrate(rows) {
+    if (celebrating || rows.length === 0) return
+    const topScore = rows[0].score
+    const leaders = rows.filter(r => r.score === topScore)
+    const names = leaders.map(r => r.name).join(' & ')
+    setCelebrationNames(names)
+    setCelebrating(true)
+  }
+
   const header = (
     <div className="section-head">
       <div>
@@ -303,11 +349,23 @@ export default function Ligaer() {
           {selectedLeague && (
             <div className="league-head">
               <span className="league-head-name">{selectedLeague.name}</span>
-              {isAdmin && (
-                <button className="btn-gear" onClick={() => setShowSettings(true)} title="Ligainnstillinger">
-                  <GearIcon />
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                {current && current.rows.length > 0 && (
+                  <button
+                    className="btn-gear"
+                    onClick={() => celebrate(current.rows)}
+                    disabled={celebrating}
+                    title="Feir lederen!"
+                  >
+                    <CelebrationIcon />
+                  </button>
+                )}
+                {isAdmin && (
+                  <button className="btn-gear" onClick={() => setShowSettings(true)} title="Ligainnstillinger">
+                    <GearIcon />
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -382,6 +440,13 @@ export default function Ligaer() {
           matches={matches}
           onClose={() => setSelectedUser(null)}
           loading={selectedUser.loading}
+        />
+      )}
+
+      {celebrating && (
+        <CelebrationOverlay
+          names={celebrationNames}
+          onDismiss={() => setCelebrating(false)}
         />
       )}
     </div>

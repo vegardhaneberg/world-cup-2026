@@ -965,6 +965,33 @@ button { font-family: var(--ff-body); cursor: pointer; }
 .rules-section ul { margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 6px; }
 .rules-section li { font-size: 14px; line-height: 1.5; color: var(--ink); }
 
+/* ---- Celebration overlay ---- */
+.celebration-overlay {
+  position: fixed; inset: 0; z-index: 70;
+  background: rgba(26, 28, 32, 0.88);
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.celebration-name {
+  font-family: var(--ff-display); font-size: clamp(36px, 10vw, 72px);
+  text-transform: uppercase; letter-spacing: 0.04em; text-align: center;
+  color: #d4a017;
+  max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: celebrate-pulse 1.4s ease-in-out infinite;
+}
+.celebration-name--no-motion {
+  animation: none;
+  text-shadow: 0 0 24px rgba(212, 160, 23, 0.8);
+}
+@keyframes celebrate-pulse {
+  0%, 100% { text-shadow: 0 0 16px rgba(212, 160, 23, 0.6), 0 0 40px rgba(212, 160, 23, 0.3); }
+  50%       { text-shadow: 0 0 32px rgba(212, 160, 23, 1),   0 0 80px rgba(212, 160, 23, 0.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .celebration-name { animation: none; text-shadow: 0 0 24px rgba(212, 160, 23, 0.8); }
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 520px) {
   .app { padding: 0 16px 132px; }
