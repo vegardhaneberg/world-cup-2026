@@ -976,8 +976,8 @@ button { font-family: var(--ff-body); cursor: pointer; }
   font-family: var(--ff-display); font-size: clamp(36px, 10vw, 72px);
   text-transform: uppercase; letter-spacing: 0.04em; text-align: center;
   color: #d4a017;
-  max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 90vw;
+  word-break: break-word;
   animation: celebrate-pulse 1.4s ease-in-out infinite;
 }
 .celebration-name--no-motion {
