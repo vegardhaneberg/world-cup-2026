@@ -98,8 +98,10 @@ async function main() {
       continue;
     }
 
-    const isKnockout = apiMatch.stage !== 'GROUP_STAGE';
-    const scoreSource = isKnockout ? apiMatch.score?.regularTime : apiMatch.score?.fullTime;
+    const duration = apiMatch.score?.duration;
+    // REGULAR duration means the game ended at 90 min — fullTime holds the result.
+    // EXTRA_TIME / PENALTY_SHOOTOUT — fullTime includes ET/penalties, so use regularTime for the 90-min score.
+    const scoreSource = duration === 'REGULAR' ? apiMatch.score?.fullTime : apiMatch.score?.regularTime;
     const homeScore = scoreSource?.home ?? null;
     const awayScore = scoreSource?.away ?? null;
     const isFinished = apiMatch.status === 'FINISHED' && homeScore != null && awayScore != null;
