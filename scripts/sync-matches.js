@@ -98,8 +98,10 @@ async function main() {
       continue;
     }
 
-    const homeScore = apiMatch.score?.fullTime?.home ?? null;
-    const awayScore = apiMatch.score?.fullTime?.away ?? null;
+    const isKnockout = apiMatch.stage !== 'GROUP_STAGE';
+    const scoreSource = isKnockout ? apiMatch.score?.regularTime : apiMatch.score?.fullTime;
+    const homeScore = scoreSource?.home ?? null;
+    const awayScore = scoreSource?.away ?? null;
     const isFinished = apiMatch.status === 'FINISHED' && homeScore != null && awayScore != null;
 
     const row = {

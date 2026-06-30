@@ -41,3 +41,4 @@ pnpm-debug.log*
 .claude/tasks
 requests/.env
 src/data/football-data-apiresponse-sample.json
+src/data/matchresults-including-knockout-matches.json
