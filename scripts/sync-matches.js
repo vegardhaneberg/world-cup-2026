@@ -119,7 +119,9 @@ async function main() {
       last_updated: apiMatch.lastUpdated ?? null,
       home_score: isFinished ? homeScore : null,
       away_score: isFinished ? awayScore : null,
-      result: isFinished ? deriveResult(apiMatch.score?.winner, homeScore, awayScore) : null,
+      // For ET/penalty matches score.winner reflects the overall winner, not 90-min outcome.
+      // Pass null so deriveResult falls through to score comparison using the regularTime scores.
+      result: isFinished ? deriveResult(duration === 'REGULAR' ? apiMatch.score?.winner : null, homeScore, awayScore) : null,
       played_at: isFinished ? (apiMatch.utcDate ?? null) : null,
     };
 
